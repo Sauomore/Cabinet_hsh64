@@ -5,7 +5,7 @@ edition = "2021"
 authors = ["HSH Contributors"]
 description = "64-bit semantic hashing extension (feat4 + sim52 + abs8) for HSH"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/Cabinet-HSH/hsh64"
+repository = "https://github.com/Sauomore/Cabinet_hsh64"
 
 [dependencies]
 byteorder = "1.5"
