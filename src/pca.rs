@@ -26,18 +26,32 @@ impl PcaProjection {
         }
 
         let mut cursor = Cursor::new(bytes);
-        let magic = cursor.read_u32::<BigEndian>().map_err(|e| EncodeError::Config(e.to_string()))?;
+        let magic = cursor
+            .read_u32::<BigEndian>()
+            .map_err(|e| EncodeError::Config(e.to_string()))?;
         if magic != PCA_MAGIC {
-            return Err(EncodeError::Config(format!("PCA magic 不匹配: 0x{:08X}", magic)));
+            return Err(EncodeError::Config(format!(
+                "PCA magic 不匹配: 0x{:08X}",
+                magic
+            )));
         }
 
-        let version = cursor.read_u32::<BigEndian>().map_err(|e| EncodeError::Config(e.to_string()))?;
+        let version = cursor
+            .read_u32::<BigEndian>()
+            .map_err(|e| EncodeError::Config(e.to_string()))?;
         if version != PCA_VERSION {
-            return Err(EncodeError::Config(format!("PCA version 不支持: {}", version)));
+            return Err(EncodeError::Config(format!(
+                "PCA version 不支持: {}",
+                version
+            )));
         }
 
-        let dim = cursor.read_u32::<BigEndian>().map_err(|e| EncodeError::Config(e.to_string()))? as usize;
-        let n_components = cursor.read_u32::<BigEndian>().map_err(|e| EncodeError::Config(e.to_string()))? as usize;
+        let dim = cursor
+            .read_u32::<BigEndian>()
+            .map_err(|e| EncodeError::Config(e.to_string()))? as usize;
+        let n_components = cursor
+            .read_u32::<BigEndian>()
+            .map_err(|e| EncodeError::Config(e.to_string()))? as usize;
 
         if n_components != PCA_N_COMPONENTS {
             return Err(EncodeError::Config(format!(
@@ -48,19 +62,25 @@ impl PcaProjection {
 
         let mut mean = vec![0.0f32; dim];
         for i in 0..dim {
-            mean[i] = cursor.read_f32::<BigEndian>().map_err(|e| EncodeError::Config(e.to_string()))?;
+            mean[i] = cursor
+                .read_f32::<BigEndian>()
+                .map_err(|e| EncodeError::Config(e.to_string()))?;
         }
 
         let mut components = vec![vec![0.0f32; dim]; n_components];
         for i in 0..n_components {
             for j in 0..dim {
-                components[i][j] = cursor.read_f32::<BigEndian>().map_err(|e| EncodeError::Config(e.to_string()))?;
+                components[i][j] = cursor
+                    .read_f32::<BigEndian>()
+                    .map_err(|e| EncodeError::Config(e.to_string()))?;
             }
         }
 
         let mut explained_variance_ratio = vec![0.0f32; n_components];
         for i in 0..n_components {
-            explained_variance_ratio[i] = cursor.read_f32::<BigEndian>().map_err(|e| EncodeError::Config(e.to_string()))?;
+            explained_variance_ratio[i] = cursor
+                .read_f32::<BigEndian>()
+                .map_err(|e| EncodeError::Config(e.to_string()))?;
         }
 
         Ok(Self {
@@ -78,7 +98,8 @@ impl PcaProjection {
         buf.write_u32::<BigEndian>(PCA_MAGIC).unwrap();
         buf.write_u32::<BigEndian>(PCA_VERSION).unwrap();
         buf.write_u32::<BigEndian>(self.dim as u32).unwrap();
-        buf.write_u32::<BigEndian>(self.n_components as u32).unwrap();
+        buf.write_u32::<BigEndian>(self.n_components as u32)
+            .unwrap();
 
         for &v in &self.mean {
             buf.write_f32::<BigEndian>(v).unwrap();
@@ -144,7 +165,9 @@ mod tests {
     #[test]
     fn test_pca_mock_project() {
         let pca = PcaProjection::mock(64);
-        let vec: Vec<f32> = (0..64).map(|i| if i % 2 == 0 { 1.0 } else { -1.0 }).collect();
+        let vec: Vec<f32> = (0..64)
+            .map(|i| if i % 2 == 0 { 1.0 } else { -1.0 })
+            .collect();
         let proj = pca.project(&vec);
         assert_eq!(proj.len(), 52);
     }

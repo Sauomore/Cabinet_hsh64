@@ -96,6 +96,33 @@ def write_pca_cache(path, dim, mean, components, evr):
             f.write(struct.pack(">f", float(v)))
 
 
+def load_pca_cache(path):
+    """读取 PCA 二进制缓存，返回 (mean, components, evr)。"""
+    data = Path(path).read_bytes()
+    if len(data) < 16:
+        raise ValueError("PCA 缓存过短")
+    magic = struct.unpack(">I", data[0:4])[0]
+    version = struct.unpack(">I", data[4:8])[0]
+    dim = struct.unpack(">I", data[8:12])[0]
+    n_components = struct.unpack(">I", data[12:16])[0]
+    if magic != PCA_MAGIC:
+        raise ValueError(f"PCA magic 不匹配: 0x{magic:08X}")
+    if version != PCA_VERSION:
+        raise ValueError(f"PCA version 不支持: {version}")
+    if n_components != N_COMPONENTS:
+        raise ValueError(f"PCA 组件数错误: {n_components}")
+
+    offset = 16
+    mean = np.frombuffer(data[offset:offset + dim * 4], dtype=">f4").copy().astype(np.float32)
+    offset += dim * 4
+    components = np.frombuffer(
+        data[offset:offset + n_components * dim * 4], dtype=">f4"
+    ).copy().astype(np.float32).reshape(n_components, dim)
+    offset += n_components * dim * 4
+    evr = np.frombuffer(data[offset:offset + n_components * 4], dtype=">f4").copy().astype(np.float32)
+    return mean, components, evr
+
+
 def main():
     parser = argparse.ArgumentParser(description="训练 HSH-64 PCA（52 维）")
     parser.add_argument("--embedding-cache", required=True, type=Path, help="embedding 缓存路径")

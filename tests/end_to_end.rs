@@ -27,8 +27,11 @@ fn test_end_to_end_with_pca_cache() {
 
     let encoder = Encoder::with_config(config).expect("创建 Encoder 失败");
     let embedding = Arc::new(
-        hsh64::embedding::FileCachedEmbedding::new(data_dir.join("embedding.cache"), encoder.embed_dim())
-            .expect("加载 embedding 失败"),
+        hsh64::embedding::FileCachedEmbedding::new(
+            data_dir.join("embedding.cache"),
+            encoder.embed_dim(),
+        )
+        .expect("加载 embedding 失败"),
     );
 
     let index = MihSemanticIndex::build_with_embedding(encoder, embedding, 4, false)

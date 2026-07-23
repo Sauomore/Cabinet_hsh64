@@ -32,8 +32,9 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent))
-from generate_embeddings import write_cache
+import generate_embeddings
 from train_pca_64 import parse_embedding_cache, train_pca, write_pca_cache
+import train_deep_hash_v3_64
 
 DEFAULT_VOCAB = ["苹果", "香蕉", "橙子", "葡萄", "西瓜", "草莓", "樱桃", "柠檬",
                  "汽车", "火车", "飞机", "轮船", "自行车", "摩托车",
@@ -148,6 +149,13 @@ def main():
     parser.add_argument("--radii", default="0,2,4,6,8", help="Hamming radius，逗号分隔")
     parser.add_argument("--dim", type=int, default=384, help="mock embedding 维度")
     parser.add_argument("--asymmetric", action="store_true", help="使用非对称距离粗排")
+    parser.add_argument("--deep-hash", action="store_true", help="使用 Deep Hash v3 替代 PCA")
+    parser.add_argument("--deep-hash-path", type=Path, default=Path("tests/data/deep_hash_v3_64.bin"), help="Deep Hash 模型路径")
+    parser.add_argument("--skip-deep-hash-train", action="store_true", help="跳过 Deep Hash 训练（复用已有模型）")
+    parser.add_argument("--deep-hash-epochs", type=int, default=500, help="Deep Hash 训练轮数")
+    parser.add_argument("--deep-hash-hidden-dim", type=int, default=512, help="Deep Hash 隐藏层维度")
+    parser.add_argument("--teacher-cache", type=Path, help="教师向量缓存（Deep Hash 蒸馏）")
+    parser.add_argument("--sim-override", type=Path, help="后处理优化的 sim 码覆盖缓存路径")
     args = parser.parse_args()
 
     ensure_vocab(args.vocab, args.vocab_size)
@@ -156,6 +164,7 @@ def main():
 
     emb_path = args.output / "embedding.cache"
     pca_path = args.output / "pca_52.bin"
+    deep_hash_path = args.deep_hash_path
     args.output.mkdir(parents=True, exist_ok=True)
 
     # 1. 生成/复用 embedding
@@ -166,11 +175,11 @@ def main():
         print("生成 embedding...", file=sys.stderr)
         if args.use_mock:
             vectors = generate_mock_embeddings(words, args.dim)
-            write_cache(emb_path, args.dim, list(zip(words, vectors)))
+            generate_embeddings.write_cache(emb_path, args.dim, list(zip(words, vectors)))
             dim = args.dim
         else:
             dim, vectors = generate_embeddings_with_model(words, args.model, args.local_model)
-            write_cache(emb_path, dim, list(zip(words, vectors)))
+            generate_embeddings.write_cache(emb_path, dim, list(zip(words, vectors)))
         print(f"完成: {emb_path}", file=sys.stderr)
 
     # 2. 训练/复用 PCA
@@ -182,6 +191,27 @@ def main():
         mean, components, evr = train_pca(X)
         write_pca_cache(pca_path, dim, mean, components, evr)
         print(f"完成: {pca_path}", file=sys.stderr)
+
+    # 2.5 训练/复用 Deep Hash v3
+    if args.deep_hash:
+        if args.skip_deep_hash_train and deep_hash_path.exists():
+            print(f"复用已有 Deep Hash: {deep_hash_path}", file=sys.stderr)
+        else:
+            print("训练 Deep Hash v3 (52-bit)...", file=sys.stderr)
+            _, _, X = parse_embedding_cache(emb_path)
+            teacher_X = None
+            if args.teacher_cache is not None:
+                _, _, teacher_X = parse_embedding_cache(args.teacher_cache)
+            mean, model, _ = train_deep_hash_v3_64.train_deep_hash_v3(
+                X,
+                n_bits=52,
+                hidden_dim=args.deep_hash_hidden_dim,
+                epochs=args.deep_hash_epochs,
+                teacher_X=teacher_X,
+            )
+            train_deep_hash_v3_64.export_deep_hash_v3(deep_hash_path, mean, model)
+            train_deep_hash_v3_64.evaluate(X, mean, model, 52)
+            print(f"完成: {deep_hash_path}", file=sys.stderr)
 
     # 3. 生成/复用 reranker embedding（双 embedding 精排）
     if args.skip_reranker:
@@ -220,6 +250,10 @@ def main():
         "--segment-counts", args.segment_counts,
         "--radii", args.radii,
     ]
+    if args.deep_hash:
+        cmd.extend(["--deep-hash", str(deep_hash_path)])
+    if args.sim_override is not None:
+        cmd.extend(["--sim-override", str(args.sim_override)])
     if reranker_path:
         cmd.extend(["--reranker", str(reranker_path)])
     if args.asymmetric:

@@ -1,0 +1,342 @@
+{
+  "task1_grid_search": [
+    {
+      "pos_k": 10,
+      "neg_weight": 0.05,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk10_nw0.05_mi5.bin",
+      "recall": 0.4169
+    },
+    {
+      "pos_k": 10,
+      "neg_weight": 0.05,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk10_nw0.05_mi10.bin",
+      "recall": 0.4169
+    },
+    {
+      "pos_k": 10,
+      "neg_weight": 0.1,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk10_nw0.1_mi5.bin",
+      "recall": 0.4279
+    },
+    {
+      "pos_k": 10,
+      "neg_weight": 0.1,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk10_nw0.1_mi10.bin",
+      "recall": 0.4296
+    },
+    {
+      "pos_k": 10,
+      "neg_weight": 0.2,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk10_nw0.2_mi5.bin",
+      "recall": 0.49
+    },
+    {
+      "pos_k": 10,
+      "neg_weight": 0.2,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk10_nw0.2_mi10.bin",
+      "recall": 0.5044
+    },
+    {
+      "pos_k": 10,
+      "neg_weight": 0.5,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk10_nw0.5_mi5.bin",
+      "recall": 0.6546
+    },
+    {
+      "pos_k": 10,
+      "neg_weight": 0.5,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk10_nw0.5_mi10.bin",
+      "recall": 0.7194
+    },
+    {
+      "pos_k": 10,
+      "neg_weight": 1.0,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk10_nw1.0_mi5.bin",
+      "recall": 0.6656
+    },
+    {
+      "pos_k": 10,
+      "neg_weight": 1.0,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk10_nw1.0_mi10.bin",
+      "recall": 0.728
+    },
+    {
+      "pos_k": 10,
+      "neg_weight": 2.0,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk10_nw2.0_mi5.bin",
+      "recall": 0.6234
+    },
+    {
+      "pos_k": 10,
+      "neg_weight": 2.0,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk10_nw2.0_mi10.bin",
+      "recall": 0.6798
+    },
+    {
+      "pos_k": 15,
+      "neg_weight": 0.05,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk15_nw0.05_mi5.bin",
+      "recall": 0.4098
+    },
+    {
+      "pos_k": 15,
+      "neg_weight": 0.05,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk15_nw0.05_mi10.bin",
+      "recall": 0.4098
+    },
+    {
+      "pos_k": 15,
+      "neg_weight": 0.1,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk15_nw0.1_mi5.bin",
+      "recall": 0.4118
+    },
+    {
+      "pos_k": 15,
+      "neg_weight": 0.1,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk15_nw0.1_mi10.bin",
+      "recall": 0.4118
+    },
+    {
+      "pos_k": 15,
+      "neg_weight": 0.2,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk15_nw0.2_mi5.bin",
+      "recall": 0.4216
+    },
+    {
+      "pos_k": 15,
+      "neg_weight": 0.2,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk15_nw0.2_mi10.bin",
+      "recall": 0.4235
+    },
+    {
+      "pos_k": 15,
+      "neg_weight": 0.5,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk15_nw0.5_mi5.bin",
+      "recall": 0.5692
+    },
+    {
+      "pos_k": 15,
+      "neg_weight": 0.5,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk15_nw0.5_mi10.bin",
+      "recall": 0.6255
+    },
+    {
+      "pos_k": 15,
+      "neg_weight": 1.0,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk15_nw1.0_mi5.bin",
+      "recall": 0.6635
+    },
+    {
+      "pos_k": 15,
+      "neg_weight": 1.0,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk15_nw1.0_mi10.bin",
+      "recall": 0.7229
+    },
+    {
+      "pos_k": 15,
+      "neg_weight": 2.0,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk15_nw2.0_mi5.bin",
+      "recall": 0.6492
+    },
+    {
+      "pos_k": 15,
+      "neg_weight": 2.0,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk15_nw2.0_mi10.bin",
+      "recall": 0.7106
+    },
+    {
+      "pos_k": 20,
+      "neg_weight": 0.05,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk20_nw0.05_mi5.bin",
+      "recall": 0.4097
+    },
+    {
+      "pos_k": 20,
+      "neg_weight": 0.05,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk20_nw0.05_mi10.bin",
+      "recall": 0.4097
+    },
+    {
+      "pos_k": 20,
+      "neg_weight": 0.1,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk20_nw0.1_mi5.bin",
+      "recall": 0.4103
+    },
+    {
+      "pos_k": 20,
+      "neg_weight": 0.1,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk20_nw0.1_mi10.bin",
+      "recall": 0.4103
+    },
+    {
+      "pos_k": 20,
+      "neg_weight": 0.2,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk20_nw0.2_mi5.bin",
+      "recall": 0.4121
+    },
+    {
+      "pos_k": 20,
+      "neg_weight": 0.2,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk20_nw0.2_mi10.bin",
+      "recall": 0.4121
+    },
+    {
+      "pos_k": 20,
+      "neg_weight": 0.5,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk20_nw0.5_mi5.bin",
+      "recall": 0.4624
+    },
+    {
+      "pos_k": 20,
+      "neg_weight": 0.5,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk20_nw0.5_mi10.bin",
+      "recall": 0.4769
+    },
+    {
+      "pos_k": 20,
+      "neg_weight": 1.0,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk20_nw1.0_mi5.bin",
+      "recall": 0.6259
+    },
+    {
+      "pos_k": 20,
+      "neg_weight": 1.0,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk20_nw1.0_mi10.bin",
+      "recall": 0.6922
+    },
+    {
+      "pos_k": 20,
+      "neg_weight": 2.0,
+      "max_iters": 5,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk20_nw2.0_mi5.bin",
+      "recall": 0.6436
+    },
+    {
+      "pos_k": 20,
+      "neg_weight": 2.0,
+      "max_iters": 10,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk20_nw2.0_mi10.bin",
+      "recall": 0.714
+    }
+  ],
+  "task1_best": {
+    "pos_k": 10,
+    "neg_weight": 1.0,
+    "max_iters": 10,
+    "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h1024_s2024_recall_pk10_nw1.0_mi10.bin",
+    "recall": 0.728
+  },
+  "task2_train": [
+    {
+      "hidden_dim": 256,
+      "seed": 42,
+      "model_output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\deep_hash_v3_64_3109_h256_s42.bin",
+      "init_override": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h256_s42_init.bin",
+      "recall": 0.4315
+    },
+    {
+      "hidden_dim": 256,
+      "seed": 2024,
+      "model_output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\deep_hash_v3_64_3109_h256_s2024.bin",
+      "init_override": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h256_s2024_init.bin",
+      "recall": 0.4221
+    },
+    {
+      "hidden_dim": 512,
+      "seed": 42,
+      "model_output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\deep_hash_v3_64_3109_h512_s42.bin",
+      "init_override": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h512_s42_init.bin",
+      "recall": 0.4265
+    },
+    {
+      "hidden_dim": 512,
+      "seed": 2024,
+      "model_output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\deep_hash_v3_64_3109_h512_s2024.bin",
+      "init_override": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h512_s2024_init.bin",
+      "recall": 0.4304
+    },
+    {
+      "hidden_dim": 128,
+      "seed": 42,
+      "model_output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\deep_hash_v3_64_3109_h128_s42.bin",
+      "init_override": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h128_s42_init.bin",
+      "recall": 0.4228
+    },
+    {
+      "hidden_dim": 128,
+      "seed": 2024,
+      "model_output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\deep_hash_v3_64_3109_h128_s2024.bin",
+      "init_override": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h128_s2024_init.bin",
+      "recall": 0.4179
+    }
+  ],
+  "task3_top3": [
+    {
+      "hidden_dim": 256,
+      "seed": 42,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h256_s42_recall.bin",
+      "recall": 0.7382,
+      "grid_params": {
+        "pos_k": 10,
+        "neg_weight": 1.0,
+        "max_iters": 10
+      }
+    },
+    {
+      "hidden_dim": 512,
+      "seed": 2024,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h512_s2024_recall.bin",
+      "recall": 0.7367,
+      "grid_params": {
+        "pos_k": 10,
+        "neg_weight": 1.0,
+        "max_iters": 10
+      }
+    },
+    {
+      "hidden_dim": 512,
+      "seed": 42,
+      "output": "I:\\Cabinet_HSH\\hsh64\\tests\\data\\sim_override_3109_h512_s42_recall.bin",
+      "recall": 0.7404,
+      "grid_params": {
+        "pos_k": 10,
+        "neg_weight": 1.0,
+        "max_iters": 10
+      }
+    }
+  ]
+}

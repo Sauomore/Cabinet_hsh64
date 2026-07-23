@@ -62,7 +62,11 @@ impl MihSemanticIndex {
         let n = query_proj.len().min(52);
         let mut score = 0.0f32;
         for i in 0..n {
-            let bit_val = if (sim_code >> i) & 1 == 1 { 1.0f32 } else { -1.0f32 };
+            let bit_val = if (sim_code >> i) & 1 == 1 {
+                1.0f32
+            } else {
+                -1.0f32
+            };
             score += query_proj[i] * bit_val;
         }
         score
@@ -130,7 +134,8 @@ impl MihSemanticIndex {
         segment_count: usize,
         strict_vocab: bool,
     ) -> Result<Self, EncodeError> {
-        let mut index = Self::build_with_embedding(encoder, embedding, segment_count, strict_vocab)?;
+        let mut index =
+            Self::build_with_embedding(encoder, embedding, segment_count, strict_vocab)?;
         index.reranker = Some(reranker);
         Ok(index)
     }
@@ -190,14 +195,18 @@ impl MihSemanticIndex {
                     }
                 })
                 .collect();
-            ranked.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+            ranked.sort_by(|a, b| {
+                b.score
+                    .partial_cmp(&a.score)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
             ranked
         } else {
             coarse
                 .iter()
                 .map(|(word, hamming)| SearchResult {
                     word: word.clone(),
-                    score: -( *hamming as f32),
+                    score: -(*hamming as f32),
                     hamming: *hamming,
                 })
                 .collect()
@@ -207,21 +216,65 @@ impl MihSemanticIndex {
         Ok(results)
     }
 
-    /// 自适应 radius 搜索：从 0 开始扩展直到候选足够
+    /// 自适应 radius 搜索：逐步扩大 Hamming 半径，直到候选池增长饱和。
+    ///
+    /// 策略：半径从 0 开始以步长 2 扩展。当同时满足
+    ///   1) 候选数 >= max(top_k, coarse_factor * top_k)
+    ///   2) 本轮新增候选占比 < growth_threshold（默认 10%）
+    /// 时停止，避免在邻居尚未完全召回时过早截断。
     pub fn search_adaptive(
         &self,
         query: &str,
         top_k: usize,
         coarse_factor: usize,
         max_radius: u32,
-    ) -> Result<Vec<SearchResult>, EncodeError> {
-        for radius in (0..=max_radius).step_by(2) {
-            let results = self.search(query, top_k, radius, coarse_factor)?;
-            if results.len() >= top_k {
-                return Ok(results);
+    ) -> Result<(u32, Vec<SearchResult>), EncodeError> {
+        self.search_adaptive_with_threshold(query, top_k, coarse_factor, max_radius, 0.1)
+    }
+
+    /// 带自定义增长阈值的可自适应 radius 搜索。
+    pub fn search_adaptive_with_threshold(
+        &self,
+        query: &str,
+        top_k: usize,
+        coarse_factor: usize,
+        max_radius: u32,
+        growth_threshold: f32,
+    ) -> Result<(u32, Vec<SearchResult>), EncodeError> {
+        if self.strict_vocab {
+            let vocab: HashSet<String> = self.embedding.vocab().into_iter().collect();
+            if !vocab.contains(query) {
+                return Err(EncodeError::Config(format!(
+                    "查询词 '{}' 不在词表中",
+                    query
+                )));
             }
         }
-        self.search(query, top_k, max_radius, coarse_factor)
+
+        let query_code = self.encoder.encode_word_with_pos(query, "n");
+        let query_sim = query_code.sim();
+        let target = (coarse_factor * top_k).max(top_k);
+        let mut prev_count: usize = 0;
+
+        for radius in (0..=max_radius).step_by(2) {
+            let candidates = self.collect_candidates(query_sim, radius);
+            let count = candidates.len();
+            let growth = if prev_count == 0 {
+                f32::INFINITY
+            } else {
+                (count.saturating_sub(prev_count)) as f32 / prev_count as f32
+            };
+
+            if count >= target && (growth < growth_threshold || radius == max_radius) {
+                // 自适应阶段只负责选 radius；精排阶段使用全部候选，避免 coarse_factor 截断真邻居。
+                return Ok((radius, self.search(query, top_k, radius, usize::MAX)?));
+            }
+            prev_count = count;
+        }
+        Ok((
+            max_radius,
+            self.search(query, top_k, max_radius, usize::MAX)?,
+        ))
     }
 
     /// 非对称距离搜索
@@ -288,7 +341,11 @@ impl MihSemanticIndex {
                     }
                 })
                 .collect();
-            ranked.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+            ranked.sort_by(|a, b| {
+                b.score
+                    .partial_cmp(&a.score)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
             ranked
         } else {
             coarse
@@ -305,24 +362,82 @@ impl MihSemanticIndex {
         Ok(results)
     }
 
-    fn collect_candidates(&self, query_sim: u64, radius: u32) -> Vec<String> {
+    /// 自适应非对称距离搜索
+    pub fn search_adaptive_asymmetric(
+        &self,
+        query: &str,
+        top_k: usize,
+        coarse_factor: usize,
+        max_radius: u32,
+    ) -> Result<(u32, Vec<SearchResult>), EncodeError> {
+        if self.strict_vocab {
+            let vocab: HashSet<String> = self.embedding.vocab().into_iter().collect();
+            if !vocab.contains(query) {
+                return Err(EncodeError::Config(format!(
+                    "查询词 '{}' 不在词表中",
+                    query
+                )));
+            }
+        }
+
+        let query_code = self.encoder.encode_word_with_pos(query, "n");
+        let query_sim = query_code.sim();
+        let target = (coarse_factor * top_k).max(top_k);
+        let mut prev_count: usize = 0;
+        let growth_threshold = 0.1f32;
+
+        for radius in (0..=max_radius).step_by(2) {
+            let candidates = self.collect_candidates(query_sim, radius);
+            let count = candidates.len();
+            let growth = if prev_count == 0 {
+                f32::INFINITY
+            } else {
+                (count.saturating_sub(prev_count)) as f32 / prev_count as f32
+            };
+
+            if count >= target && (growth < growth_threshold || radius == max_radius) {
+                // 自适应阶段只负责选 radius；精排阶段使用全部候选。
+                return Ok((
+                    radius,
+                    self.search_asymmetric(query, top_k, radius, usize::MAX)?,
+                ));
+            }
+            prev_count = count;
+        }
+        Ok((
+            max_radius,
+            self.search_asymmetric(query, top_k, max_radius, usize::MAX)?,
+        ))
+    }
+
+    pub fn encoder(&self) -> &Encoder {
+        &self.encoder
+    }
+
+    /// 收集 query_sim 在 Hamming 半径 radius 内的所有候选词。
+    ///
+    /// 使用标准 MIH 思想：把 52-bit sim 切成 `segment_count` 段，每段
+    /// `segment_bits` 位。对每一段枚举该段上 Hamming 距离不超过
+    /// `min(radius, segment_bits)` 的所有段值，收集对应倒排桶中的词；
+    /// 最后用完整 sim Hamming 距离 `<= radius` 做精确过滤。
+    ///
+    /// 该实现保证不遗漏任何完整 Hamming 距离 <= radius 的候选。
+    pub fn collect_candidates(&self, query_sim: u64, radius: u32) -> Vec<String> {
         let mut seen = HashSet::new();
         let mut result = Vec::new();
 
-        // 每段允许的最大 Hamming 距离：候选只要在任意一段内距离 <= segment_radius 即可
-        let segment_radius = (radius as usize).max(1) / self.segment_count.max(1);
+        // 每段最多允许的 Hamming 距离：完整距离 <= radius 的候选，
+        // 必然在每一段上的距离也不超过 radius（同时不超过段长）。
+        let segment_radius = (radius as usize).min(self.segment_bits);
+        let max_seg_value = 1u32 << self.segment_bits;
 
         for seg in 0..self.segment_count {
             let query_seg = segment_value(query_sim, seg, self.segment_bits);
-            let start = if query_seg >= segment_radius as u32 {
-                query_seg - segment_radius as u32
-            } else {
-                0
-            };
-            let end = (query_seg + segment_radius as u32 + 1)
-                .min(1 << self.segment_bits);
 
-            for value in start..end {
+            for value in 0..max_seg_value {
+                if hamming_distance64(value as u64, query_seg as u64) > segment_radius as u32 {
+                    continue;
+                }
                 if let Some(words) = self.segment_indices[seg].get(&value) {
                     for word in words {
                         if seen.insert(word.clone()) {
@@ -333,7 +448,7 @@ impl MihSemanticIndex {
             }
         }
 
-        // 再按完整 sim Hamming 距离过滤
+        // 用完整 sim Hamming 距离精确过滤
         result
             .into_iter()
             .filter(|word| {
@@ -379,7 +494,10 @@ mod tests {
     fn build_test_index() -> MihSemanticIndex {
         let encoder = Encoder::new();
         let words: Vec<String> = (0..100).map(|i| format!("词{}", i)).collect();
-        let embedding = Arc::new(MockEmbedding::with_vocab(encoder.embed_dim(), words.clone()));
+        let embedding = Arc::new(MockEmbedding::with_vocab(
+            encoder.embed_dim(),
+            words.clone(),
+        ));
         MihSemanticIndex::build_with_embedding(encoder, embedding, 4, false).unwrap()
     }
 
