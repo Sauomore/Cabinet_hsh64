@@ -88,7 +88,9 @@ impl FileCachedEmbedding {
         Ok(Self {
             dim,
             cache,
-            fallback: MockEmbedding::new(fallback_dim),
+            // 若调用方未指定 fallback_dim（传 0），则使用缓存本身的维度，
+            // 避免 reranker embedding 维度与 encoder 不一致时返回错误维度的 fallback 向量
+            fallback: MockEmbedding::new(if fallback_dim == 0 { dim } else { fallback_dim }),
         })
     }
 
