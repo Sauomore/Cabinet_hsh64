@@ -140,6 +140,10 @@ def main():
     parser.add_argument("--use-mock", action="store_true", help="使用 mock embedding 而非真实模型")
     parser.add_argument("--model", default="BAAI/bge-small-zh-v1.5", help="真实模型名称")
     parser.add_argument("--local-model", type=Path, help="本地模型路径")
+    parser.add_argument("--reranker-model", default="BAAI/bge-large-zh-v1.5", help="reranker 模型名称")
+    parser.add_argument("--local-reranker-model", type=Path, help="本地 reranker 模型路径")
+    parser.add_argument("--reranker-cache", type=Path, default=Path("tests/data/reranker_embedding.cache"), help="reranker embedding 缓存路径")
+    parser.add_argument("--skip-reranker", action="store_true", help="不生成/使用 reranker embedding")
     parser.add_argument("--segment-counts", default="1,2,4,13", help="MIH 段数，逗号分隔")
     parser.add_argument("--radii", default="0,2,4,6,8", help="Hamming radius，逗号分隔")
     parser.add_argument("--dim", type=int, default=384, help="mock embedding 维度")
@@ -179,7 +183,33 @@ def main():
         write_pca_cache(pca_path, dim, mean, components, evr)
         print(f"完成: {pca_path}", file=sys.stderr)
 
-    # 3. 运行 Rust benchmark
+    # 3. 生成/复用 reranker embedding（双 embedding 精排）
+    if args.skip_reranker:
+        print("跳过 reranker embedding", file=sys.stderr)
+        reranker_path = None
+    elif args.reranker_cache.exists():
+        print(f"复用已有 reranker: {args.reranker_cache}", file=sys.stderr)
+        reranker_path = args.reranker_cache
+    else:
+        print("生成 reranker embedding...", file=sys.stderr)
+        if args.use_mock:
+            # mock 场景下：复用编码 embedding 作为 reranker（代码路径正确，效果等于单 embedding）
+            import shutil
+            shutil.copy(emb_path, args.reranker_cache)
+            _, rd, _ = parse_embedding_cache(args.reranker_cache)
+            print(f"[mock] reranker 复用编码 embedding，dim={rd}", file=sys.stderr)
+        else:
+            _, ritems = generate_embeddings.encode_words(
+                words,
+                args.reranker_model,
+                args.local_reranker_model,
+                128,
+            )
+            generate_embeddings.write_cache(args.reranker_cache, rd := len(ritems[0][1]), ritems)
+            print(f"reranker 完成: dim={rd}, {len(ritems)} 个向量 -> {args.reranker_cache}", file=sys.stderr)
+        reranker_path = args.reranker_cache
+
+    # 4. 运行 Rust benchmark
     print("\n运行 Rust benchmark...", file=sys.stderr)
     cmd = [
         "cargo", "run", "--example", "benchmark_pure_hsh64", "--release", "--",
@@ -190,6 +220,8 @@ def main():
         "--segment-counts", args.segment_counts,
         "--radii", args.radii,
     ]
+    if reranker_path:
+        cmd.extend(["--reranker", str(reranker_path)])
     if args.asymmetric:
         cmd.append("--asymmetric")
     print(" ".join(cmd), file=sys.stderr)

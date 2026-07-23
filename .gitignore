@@ -7,3 +7,4 @@ __pycache__/
 *.pyc
 /tests/data/*.cache
 /tests/data/*.bin
+models/

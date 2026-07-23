@@ -20,6 +20,7 @@ use std::time::Instant;
 struct Args {
     embedding: PathBuf,
     pca: PathBuf,
+    reranker: Option<PathBuf>,
     top_k: usize,
     queries: usize,
     segment_counts: Vec<usize>,
@@ -31,6 +32,7 @@ fn parse_args() -> Args {
     let mut args = std::env::args().skip(1);
     let mut embedding = PathBuf::from("tests/data/embedding.cache");
     let mut pca = PathBuf::from("tests/data/pca_52.bin");
+    let mut reranker = None;
     let mut top_k = 10usize;
     let mut queries = 100usize;
     let mut segment_counts = vec![1usize, 2, 4, 13];
@@ -41,6 +43,7 @@ fn parse_args() -> Args {
         match arg.as_str() {
             "--embedding" => embedding = PathBuf::from(args.next().expect("--embedding 需要值")),
             "--pca" => pca = PathBuf::from(args.next().expect("--pca 需要值")),
+            "--reranker" => reranker = Some(PathBuf::from(args.next().expect("--reranker 需要值"))),
             "--top-k" => top_k = args.next().expect("--top-k 需要值").parse().expect("top-k 必须是整数"),
             "--queries" => queries = args.next().expect("--queries 需要值").parse().expect("queries 必须是整数"),
             "--segment-counts" => {
@@ -59,6 +62,7 @@ fn parse_args() -> Args {
     Args {
         embedding,
         pca,
+        reranker,
         top_k,
         queries,
         segment_counts,
@@ -147,12 +151,22 @@ fn main() {
     let encoder = hsh64::Encoder::with_config(config).expect("创建 Encoder 失败");
     println!("[构建 Encoder] 耗时 {:.2?}", t0.elapsed());
 
+    // 加载 reranker embedding（若提供）
+    let reranker_vectors: Option<Vec<Vec<f32>>> = args.reranker.as_ref().map(|path| {
+        let reranker_emb = FileCachedEmbedding::new(path, 0).expect("加载 reranker embedding 失败");
+        let rv: Vec<Vec<f32>> = vocab.iter().map(|w| reranker_emb.embed(w)).collect();
+        println!("[加载 reranker] {} 个 {}-dim 向量", rv.len(), rv[0].len());
+        rv
+    });
+
     // 4. 预计算真实邻居
     let n_queries = args.queries.min(vocab.len());
     let query_indices: Vec<usize> = (0..n_queries).collect();
     let mut truth_map: HashMap<String, HashSet<String>> = HashMap::new();
+    // 双 embedding 模式下，ground truth 用 reranker embedding 计算
+    let truth_vectors = reranker_vectors.as_ref().unwrap_or(&vectors);
     for &idx in &query_indices {
-        let topk = ground_truth_topk(idx, &vectors, args.top_k);
+        let topk = ground_truth_topk(idx, truth_vectors, args.top_k);
         let truth: HashSet<String> = topk.into_iter().map(|i| vocab[i].clone()).collect();
         truth_map.insert(vocab[idx].clone(), truth);
     }
@@ -245,13 +259,30 @@ fn main() {
         }
 
         let t0 = Instant::now();
-        let index = MihSemanticIndex::build_with_embedding(
-            encoder.clone(),
-            embedding.clone(),
-            segment_count,
-            false,
-        )
-        .expect("构建 MIH 索引失败");
+        let index = if let Some(ref reranker_path) = args.reranker {
+            // fallback_dim=0：让 FileCachedEmbedding 自动使用 reranker 缓存本身的维度
+            let reranker: Arc<dyn EmbeddingModel> =
+                match FileCachedEmbedding::new(reranker_path, 0) {
+                    Ok(model) => Arc::new(model),
+                    Err(e) => panic!("无法加载 reranker 缓存 '{}': {}", reranker_path.display(), e),
+                };
+            MihSemanticIndex::build_with_reranker(
+                encoder.clone(),
+                embedding.clone(),
+                reranker,
+                segment_count,
+                false,
+            )
+            .expect("构建带 reranker 的 MIH 索引失败")
+        } else {
+            MihSemanticIndex::build_with_embedding(
+                encoder.clone(),
+                embedding.clone(),
+                segment_count,
+                false,
+            )
+            .expect("构建 MIH 索引失败")
+        };
         let build_time = t0.elapsed();
 
         for &radius in &args.radii {
