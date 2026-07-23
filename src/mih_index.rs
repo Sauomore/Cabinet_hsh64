@@ -55,6 +55,19 @@ impl MihSemanticIndex {
         Self::build_with_embedding(encoder, embedding, segment_count, strict_vocab)
     }
 
+    /// 非对称距离评分：query 用连续投影幅度，document 用量化后的 bit
+    ///
+    /// score = Σ_j u_q[j] * (2*b_d[j] - 1)
+    pub fn asymmetric_score(query_proj: &[f32], sim_code: u64) -> f32 {
+        let n = query_proj.len().min(52);
+        let mut score = 0.0f32;
+        for i in 0..n {
+            let bit_val = if (sim_code >> i) & 1 == 1 { 1.0f32 } else { -1.0f32 };
+            score += query_proj[i] * bit_val;
+        }
+        score
+    }
+
     /// 用已加载的 embedding 模型构建 MIH 索引
     pub fn build_with_embedding(
         encoder: Encoder,
@@ -209,6 +222,87 @@ impl MihSemanticIndex {
             }
         }
         self.search(query, top_k, max_radius, coarse_factor)
+    }
+
+    /// 非对称距离搜索
+    ///
+    /// 与 `search` 不同：候选排序使用 query 的连续投影幅度与 document bit 的内积，
+    /// 而不是 Hamming 距离。这能减小 sign 量化的信息损失。
+    pub fn search_asymmetric(
+        &self,
+        query: &str,
+        top_k: usize,
+        radius: u32,
+        coarse_factor: usize,
+    ) -> Result<Vec<SearchResult>, EncodeError> {
+        if self.strict_vocab {
+            let vocab: HashSet<String> = self.embedding.vocab().into_iter().collect();
+            if !vocab.contains(query) {
+                return Err(EncodeError::Config(format!(
+                    "查询词 '{}' 不在词表中",
+                    query
+                )));
+            }
+        }
+
+        let query_code = self.encoder.encode_word_with_pos(query, "n");
+        let query_sim = query_code.sim();
+        let query_proj = self.encoder.project_word(query, query_code.feat());
+
+        let candidates = self.collect_candidates(query_sim, radius);
+        let coarse_limit = if coarse_factor == usize::MAX {
+            candidates.len()
+        } else {
+            (coarse_factor * top_k).min(candidates.len())
+        };
+
+        let mut scored: Vec<(String, u32, f32)> = candidates
+            .into_iter()
+            .map(|word| {
+                let code = self.encoder.encode_word_with_pos(&word, "n");
+                let hamming = code.sim_hamming_distance(&query_code);
+                let asym_score = Self::asymmetric_score(&query_proj, code.sim());
+                (word, hamming, asym_score)
+            })
+            .collect();
+
+        // 按非对称分数降序排列
+        scored.sort_by(|a, b| {
+            b.2.partial_cmp(&a.2)
+                .unwrap_or(std::cmp::Ordering::Equal)
+                .then_with(|| a.1.cmp(&b.1))
+        });
+        let coarse = &scored[..coarse_limit];
+
+        let mut results: Vec<SearchResult> = if let Some(reranker) = &self.reranker {
+            let query_rerank = reranker.embed(query);
+            let mut ranked: Vec<SearchResult> = coarse
+                .iter()
+                .map(|(word, hamming, _)| {
+                    let v = reranker.embed(word);
+                    let score = cosine_similarity(&query_rerank, &v);
+                    SearchResult {
+                        word: word.clone(),
+                        score,
+                        hamming: *hamming,
+                    }
+                })
+                .collect();
+            ranked.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+            ranked
+        } else {
+            coarse
+                .iter()
+                .map(|(word, hamming, asym_score)| SearchResult {
+                    word: word.clone(),
+                    score: *asym_score,
+                    hamming: *hamming,
+                })
+                .collect()
+        };
+
+        results.truncate(top_k);
+        Ok(results)
     }
 
     fn collect_candidates(&self, query_sim: u64, radius: u32) -> Vec<String> {

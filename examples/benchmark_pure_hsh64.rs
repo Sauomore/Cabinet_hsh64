@@ -24,6 +24,7 @@ struct Args {
     queries: usize,
     segment_counts: Vec<usize>,
     radii: Vec<u32>,
+    asymmetric: bool,
 }
 
 fn parse_args() -> Args {
@@ -34,6 +35,7 @@ fn parse_args() -> Args {
     let mut queries = 100usize;
     let mut segment_counts = vec![1usize, 2, 4, 13];
     let mut radii = vec![0u32, 2, 4, 6, 8];
+    let mut asymmetric = false;
 
     while let Some(arg) = args.next() {
         match arg.as_str() {
@@ -49,6 +51,7 @@ fn parse_args() -> Args {
                 let s = args.next().expect("--radii 需要值");
                 radii = s.split(',').map(|x| x.parse().unwrap()).collect();
             }
+            "--asymmetric" => asymmetric = true,
             _ => {}
         }
     }
@@ -60,6 +63,7 @@ fn parse_args() -> Args {
         queries,
         segment_counts,
         radii,
+        asymmetric,
     }
 }
 
@@ -168,38 +172,72 @@ fn main() {
         t0.elapsed()
     );
 
-    // 6. 暴力 Hamming 基准
-    println!("\n========== 暴力 Hamming 扫描 ==========");
-    let t0 = Instant::now();
-    let mut total_recall = 0.0f32;
-    for &idx in &query_indices {
-        let query_word = &vocab[idx];
-        let query_code = encoder.encode_word_with_pos(query_word, "n");
-        let mut scored: Vec<(String, u32)> = vocab
-            .iter()
-            .enumerate()
-            .filter(|(i, _)| *i != idx)
-            .map(|(_, w)| {
-                let code = encoder.encode_word_with_pos(w, "n");
-                (w.clone(), code.sim_hamming_distance(&query_code))
-            })
-            .collect();
-        scored.sort_by(|a, b| a.1.cmp(&b.1));
-        let retrieved: Vec<String> = scored.into_iter().take(args.top_k).map(|(w, _)| w).collect();
-        total_recall += recall_at_k(&retrieved, truth_map.get(query_word).unwrap(), args.top_k);
+    // 6. 暴力扫描基准
+    if args.asymmetric {
+        println!("\n========== 暴力非对称距离扫描 ==========");
+        let t0 = Instant::now();
+        let mut total_recall = 0.0f32;
+        for &idx in &query_indices {
+            let query_word = &vocab[idx];
+            let query_code = encoder.encode_word_with_pos(query_word, "n");
+            let query_proj = encoder.project_word(query_word, query_code.feat());
+            let mut scored: Vec<(String, f32)> = vocab
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| *i != idx)
+                .map(|(_, w)| {
+                    let code = encoder.encode_word_with_pos(w, "n");
+                    let score = hsh64::mih_index::MihSemanticIndex::asymmetric_score(&query_proj, code.sim());
+                    (w.clone(), score)
+                })
+                .collect();
+            scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+            let retrieved: Vec<String> = scored.into_iter().take(args.top_k).map(|(w, _)| w).collect();
+            total_recall += recall_at_k(&retrieved, truth_map.get(query_word).unwrap(), args.top_k);
+        }
+        let elapsed = t0.elapsed();
+        let qps = n_queries as f32 / elapsed.as_secs_f32();
+        println!(
+            "Recall@{} = {:.4}, QPS = {:.1}, 总耗时 {:.2?}",
+            args.top_k,
+            total_recall / n_queries as f32,
+            qps,
+            elapsed
+        );
+    } else {
+        println!("\n========== 暴力 Hamming 扫描 ==========");
+        let t0 = Instant::now();
+        let mut total_recall = 0.0f32;
+        for &idx in &query_indices {
+            let query_word = &vocab[idx];
+            let query_code = encoder.encode_word_with_pos(query_word, "n");
+            let mut scored: Vec<(String, u32)> = vocab
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| *i != idx)
+                .map(|(_, w)| {
+                    let code = encoder.encode_word_with_pos(w, "n");
+                    (w.clone(), code.sim_hamming_distance(&query_code))
+                })
+                .collect();
+            scored.sort_by(|a, b| a.1.cmp(&b.1));
+            let retrieved: Vec<String> = scored.into_iter().take(args.top_k).map(|(w, _)| w).collect();
+            total_recall += recall_at_k(&retrieved, truth_map.get(query_word).unwrap(), args.top_k);
+        }
+        let elapsed = t0.elapsed();
+        let qps = n_queries as f32 / elapsed.as_secs_f32();
+        println!(
+            "Recall@{} = {:.4}, QPS = {:.1}, 总耗时 {:.2?}",
+            args.top_k,
+            total_recall / n_queries as f32,
+            qps,
+            elapsed
+        );
     }
-    let elapsed = t0.elapsed();
-    let qps = n_queries as f32 / elapsed.as_secs_f32();
-    println!(
-        "Recall@{} = {:.4}, QPS = {:.1}, 总耗时 {:.2?}",
-        args.top_k,
-        total_recall / n_queries as f32,
-        qps,
-        elapsed
-    );
 
     // 7. MIH 多索引哈希基准
-    println!("\n========== MIH 多索引哈希 ==========");
+    let mode_name = if args.asymmetric { "MIH 非对称距离" } else { "MIH Hamming 距离" };
+    println!("\n========== {} ==========", mode_name);
     for &segment_count in &args.segment_counts {
         if 52 % segment_count != 0 {
             println!("跳过 segment_count={}（不能整除 52）", segment_count);
@@ -223,7 +261,11 @@ fn main() {
             let mut total_hamming = 0u32;
             for &idx in &query_indices {
                 let query_word = &vocab[idx];
-                let results = index.search(query_word, args.top_k, radius, usize::MAX).unwrap();
+                let results = if args.asymmetric {
+                    index.search_asymmetric(query_word, args.top_k, radius, usize::MAX).unwrap()
+                } else {
+                    index.search(query_word, args.top_k, radius, usize::MAX).unwrap()
+                };
                 let retrieved: Vec<String> = results.iter().map(|r| r.word.clone()).collect();
                 total_recall += recall_at_k(&retrieved, truth_map.get(query_word).unwrap(), args.top_k);
                 total_candidates += retrieved.len();
