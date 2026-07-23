@@ -143,6 +143,7 @@ def main():
     parser.add_argument("--segment-counts", default="1,2,4,13", help="MIH 段数，逗号分隔")
     parser.add_argument("--radii", default="0,2,4,6,8", help="Hamming radius，逗号分隔")
     parser.add_argument("--dim", type=int, default=384, help="mock embedding 维度")
+    parser.add_argument("--asymmetric", action="store_true", help="使用非对称距离粗排")
     args = parser.parse_args()
 
     ensure_vocab(args.vocab, args.vocab_size)
@@ -189,6 +190,8 @@ def main():
         "--segment-counts", args.segment_counts,
         "--radii", args.radii,
     ]
+    if args.asymmetric:
+        cmd.append("--asymmetric")
     print(" ".join(cmd), file=sys.stderr)
     result = subprocess.run(cmd, cwd=Path(__file__).parent.parent, check=False)
     return result.returncode
