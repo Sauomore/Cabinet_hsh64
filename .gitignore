@@ -3,5 +3,7 @@
 *.swp
 *.swo
 .DS_Store
+__pycache__/
+*.pyc
 /tests/data/*.cache
 /tests/data/*.bin

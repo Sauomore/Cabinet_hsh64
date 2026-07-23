@@ -32,6 +32,7 @@ impl Default for EncoderConfig {
 }
 
 /// HSH-64 编码器
+#[derive(Clone)]
 pub struct Encoder {
     #[allow(dead_code)]
     config: EncoderConfig,

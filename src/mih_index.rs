@@ -215,8 +215,8 @@ impl MihSemanticIndex {
         let mut seen = HashSet::new();
         let mut result = Vec::new();
 
-        // 每段允许的最大 Hamming 距离
-        let segment_radius = (radius as usize) / self.segment_count;
+        // 每段允许的最大 Hamming 距离：候选只要在任意一段内距离 <= segment_radius 即可
+        let segment_radius = (radius as usize).max(1) / self.segment_count.max(1);
 
         for seg in 0..self.segment_count {
             let query_seg = segment_value(query_sim, seg, self.segment_bits);
