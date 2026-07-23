@@ -3,3 +3,5 @@
 *.swp
 *.swo
 .DS_Store
+/tests/data/*.cache
+/tests/data/*.bin
