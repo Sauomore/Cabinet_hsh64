@@ -48,9 +48,8 @@ pub fn pos_to_feat(pos: &str) -> Option<FeatureCode> {
         "q" | "qv" | "qt" => Some(FeatureCode::MEASURE),
         "t" | "tg" => Some(FeatureCode::TIME),
         "f" | "fg" | "s" => Some(FeatureCode::LOC),
-        "w" | "wkz" | "wky" | "wyz" | "wyy" | "wj" | "ww" | "wt" | "wd" | "wf" | "wn" | "wm" | "ws" | "wp" | "wb" | "wh" => {
-            Some(FeatureCode::PUNCT)
-        }
+        "w" | "wkz" | "wky" | "wyz" | "wyy" | "wj" | "ww" | "wt" | "wd" | "wf" | "wn" | "wm"
+        | "ws" | "wp" | "wb" | "wh" => Some(FeatureCode::PUNCT),
         "x" | "xx" | "xu" | "xi" | "wjb" | "nx" => Some(FeatureCode::STRING),
         _ => Some(FeatureCode::FALLBACK),
     }

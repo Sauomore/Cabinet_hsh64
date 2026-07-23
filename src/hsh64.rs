@@ -33,9 +33,24 @@ impl HSHCode64 {
 
     /// 创建 HSH-64 码，参数越界时 panic
     pub fn new(feat: u8, sim: u64, abs: u8) -> Self {
-        assert!(feat <= Self::MAX_FEAT, "feat 越界: {} > {}", feat, Self::MAX_FEAT);
-        assert!(sim <= Self::MAX_SIM, "sim 越界: {} > {}", sim, Self::MAX_SIM);
-        assert!(abs <= Self::MAX_ABS, "abs 越界: {} > {}", abs, Self::MAX_ABS);
+        assert!(
+            feat <= Self::MAX_FEAT,
+            "feat 越界: {} > {}",
+            feat,
+            Self::MAX_FEAT
+        );
+        assert!(
+            sim <= Self::MAX_SIM,
+            "sim 越界: {} > {}",
+            sim,
+            Self::MAX_SIM
+        );
+        assert!(
+            abs <= Self::MAX_ABS,
+            "abs 越界: {} > {}",
+            abs,
+            Self::MAX_ABS
+        );
 
         let raw = ((feat as u64) << Self::FEAT_SHIFT)
             | ((sim & Self::MAX_SIM) << Self::SIM_SHIFT)

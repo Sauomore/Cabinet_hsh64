@@ -68,7 +68,10 @@ fn search_best_seed(words: &[String]) -> (u8, HashMap<String, u8>, Vec<u8>) {
             let abs = compute_abs(word, seed);
             counts[abs as usize] += 1;
         }
-        let collisions: usize = counts.iter().map(|&c| if c > 1 { (c - 1) as usize } else { 0 }).sum();
+        let collisions: usize = counts
+            .iter()
+            .map(|&c| if c > 1 { (c - 1) as usize } else { 0 })
+            .sum();
         if collisions < min_collision {
             min_collision = collisions;
             best_seed = seed;
