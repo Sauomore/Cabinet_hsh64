@@ -1,5 +1,10 @@
 # HSH-64
 
+[![DOI](https://zenodo.org/badge/1307857867.svg)](https://doi.org/10.5281/zenodo.21721838)
+[![GitHub release](https://img.shields.io/github/v/release/Sauomore/Cabinet_hsh64?include_prereleases&style=flat-square)](https://github.com/Sauomore/Cabinet_hsh64/releases)
+
+> **当前版本**：[`v1`](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v1)
+
 HSH-64 是面向轻量化中文词表级语义检索的 64 位可学习语义哈希方案。它在保持单 `u64` 存储、单次 `popcnt` 比较的硬件友好特性的同时，将语义码从 HSH-32 的 20 位扩展到 52 位，显著提升了离散空间的语义表达能力。
 
 > **论文摘要**：语义哈希将高维连续嵌入映射为紧凑二进制码，以极小内存占用实现次线性近似最近邻（ANN）检索。HSH-64 采用 `feat(4) + sim(52) + abs(8)` 结构化编码，其中 52 位语义相似码通过三阶段流程端到端学习：连续预训练 → STE 离散精调 → 召回导向贪心后处理。在线检索集成自适应 MIH 粗排、非对称距离评分与可选的 bge-large 精排。在 3,109 词中文词表上，最佳单模型（h512，1.17 MB）纯 Hamming 空间 Recall@10 达 **0.7404**，轻量化模型（h256，585 KB）达 **0.7382**，四模型集成达 **0.7724**，完整两阶段系统达 **0.8970**。
