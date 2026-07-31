@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSH-64 原理动画演示</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --border: #334155;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent: #60a5fa;
+            --feat: #3b82f6;
+            --sim: #f59e0b;
+            --abs: #10b981;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, var(--bg) 0%, var(--panel) 100%);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        header {
+            text-align: center;
+            padding: 24px 0;
+        }
+        h1 {
+            font-size: 2.4rem;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .subtitle { color: var(--muted); font-size: 1.05rem; }
+        .stage-nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .stage-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--border);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .stage-dot:hover::after {
+            content: attr(title);
+            position: absolute;
+            top: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+        }
+        .stage-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 14px var(--accent);
+            transform: scale(1.3);
+        }
+        .stage-dot.completed { background: #34d399; }
+        .progress-bar {
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            margin: 12px 0 20px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+        .main-stage {
+            background: rgba(30, 41, 59, 0.75);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            min-height: 620px;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+        .scene { display: none; animation: fadeIn 0.5s ease; }
+        .scene.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .scene-title {
+            font-size: 1.5rem;
+            color: #f8fafc;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+        .scene-desc {
+            text-align: center;
+            color: var(--muted);
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 28px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59,130,246,0.35); }
+        .btn-secondary { background: var(--border); color: var(--text); }
+        .btn-secondary:hover { background: #475569; }
+        .info-panel {
+            background: rgba(15, 23, 42, 0.55);
+            border-left: 4px solid var(--accent);
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+        .formula-block {
+            background: rgba(0,0,0,0.25);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin: 14px 0;
+            text-align: center;
+            overflow-x: auto;
+        }
+        .code-block {
+            background: #0b1120;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 20px;
+            font-family: "SF Mono", "Cascadia Mono", Consolas, monospace;
+            font-size: 0.85rem;
+            line-height: 1.7;
+            overflow-x: auto;
+            margin: 14px 0;
+        }
+        .code-block .kw { color: #c678dd; }
+        .code-block .fn { color: #61afef; }
+        .code-block .var { color: #e06c75; }
+        .code-block .num { color: #d19a66; }
+        .code-block .str { color: #98c379; }
+        .code-block .com { color: #5c6370; font-style: italic; }
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 16px 0;
+        }
+        @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+        .card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+        }
+        .card h4 {
+            color: var(--accent);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        .card p, .card li {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .card ul { padding-left: 18px; }
+
+        /* Bit layout */
+        .bit-strip-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            margin: 18px 0;
+        }
+        .bit-strip {
+            display: flex;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .bit-cell {
+            width: 13px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 6px;
+            font-family: monospace;
+            color: rgba(255,255,255,0.55);
+            border-right: 1px solid rgba(255,255,255,0.08);
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .bit-cell.show { opacity: 1; transform: scale(1); }
+        .bit-cell.feat { background: linear-gradient(180deg, #3b82f6, #1d4ed8); }
+        .bit-cell.sim { background: linear-gradient(180deg, #f59e0b, #d97706); }
+        .bit-cell.abs { background: linear-gradient(180deg, #10b981, #059669); }
+        .field-labels {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .field-tag {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease;
+            font-size: 0.9rem;
+        }
+        .field-tag.show { opacity: 1; transform: translateY(0); }
+        .field-color { width: 14px; height: 14px; border-radius: 4px; }
+        .hamming-demo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 18px;
+        }
+        .code-row { display: flex; gap: 2px; }
+        .code-bit {
+            width: 22px;
+            height: 28px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: monospace;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .code-bit.zero { background: #1e293b; color: #94a3b8; }
+        .code-bit.one { background: #3b82f6; color: white; }
+        .code-bit.diff { background: #ef4444; color: white; animation: pulse 0.5s ease infinite alternate; }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.15); } }
+
+        /* Pipeline / flow */
+        .pipeline {
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            gap: 14px;
+            margin: 24px 0;
+            flex-wrap: wrap;
+        }
+        .pipe-step {
+            flex: 1;
+            min-width: 200px;
+            max-width: 280px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            opacity: 0;
+            transform: translateX(-16px);
+            transition: all 0.5s ease;
+        }
+        .pipe-step.show { opacity: 1; transform: translateX(0); }
+        .pipe-step.active { border-color: var(--accent); box-shadow: 0 0 18px rgba(96,165,250,0.18); }
+        .pipe-step h3 { color: var(--accent); margin-bottom: 10px; font-size: 1rem; }
+        .pipe-step ul { list-style: none; font-size: 0.88rem; color: #cbd5e1; }
+        .pipe-step li { padding: 5px 0; padding-left: 14px; position: relative; }
+        .pipe-step li::before { content: "•"; position: absolute; left: 0; color: #34d399; }
+        .arrow-between {
+            display: flex;
+            align-items: center;
+            color: #64748b;
+            font-size: 1.4rem;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .arrow-between.show { opacity: 1; }
+        .mlp-box {
+            background: rgba(59,130,246,0.1);
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 14px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .mlp-layer {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 3px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .search-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+        .flow-node {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #475569;
+            border-radius: 10px;
+            padding: 14px 16px;
+            text-align: center;
+            min-width: 90px;
+            opacity: 0;
+            transform: scale(0.85);
+            transition: all 0.45s ease;
+        }
+        .flow-node.show { opacity: 1; transform: scale(1); }
+        .flow-node.highlight { border-color: #34d399; box-shadow: 0 0 14px rgba(52,211,153,0.25); }
+        .flow-arrow { color: #64748b; font-size: 1.3rem; }
+
+        /* MIH */
+        .mih-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            margin: 16px 0;
+        }
+        .segments-row {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .seg-block {
+            background: rgba(59,130,246,0.12);
+            border: 1px solid #3b82f6;
+            border-radius: 6px;
+            padding: 7px 8px;
+            text-align: center;
+            font-size: 0.75rem;
+            min-width: 50px;
+            transition: all 0.3s ease;
+        }
+        .seg-block.active {
+            background: rgba(59,130,246,0.4);
+            transform: scale(1.1);
+            box-shadow: 0 0 12px rgba(59,130,246,0.45);
+        }
+        .seg-bits { font-family: monospace; color: #60a5fa; font-size: 0.7rem; margin-top: 3px; }
+        .index-table {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+            max-width: 340px;
+        }
+        .index-cell {
+            background: rgba(245,158,11,0.12);
+            border: 1px solid #f59e0b;
+            border-radius: 4px;
+            padding: 5px 3px;
+            text-align: center;
+            font-size: 0.65rem;
+            transition: all 0.3s ease;
+        }
+        .index-cell.active { background: rgba(245,158,11,0.5); transform: scale(1.15); }
+        .radius-visual {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin: 14px 0;
+            flex-wrap: wrap;
+        }
+        .radius-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+            min-width: 110px;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: all 0.4s ease;
+        }
+        .radius-box.show { opacity: 1; transform: translateY(0); }
+        .radius-box.active { border-color: #34d399; background: rgba(52,211,153,0.08); }
+
+        /* Bit flip */
+        .flip-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin: 16px 0;
+        }
+        .flip-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+        .flip-card h5 { color: var(--accent); margin-bottom: 10px; font-size: 0.95rem; }
+        .flip-bits { display: flex; justify-content: center; gap: 4px; margin: 10px 0; }
+        .flip-bit {
+            width: 24px; height: 28px; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: monospace; font-size: 12px; font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .flip-bit.zero { background: #1e293b; color: #94a3b8; }
+        .flip-bit.one { background: #3b82f6; color: white; }
+        .flip-bit.changed { background: #ef4444; color: white; animation: pulse 0.6s infinite alternate; }
+        .flip-bit.accepted { background: #10b981; color: white; }
+        .recall-value { font-size: 1.2rem; font-weight: 700; color: #34d399; margin-top: 8px; }
+
+        /* Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .metric-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(16px);
+            transition: all 0.45s ease;
+        }
+        .metric-card.show { opacity: 1; transform: translateY(0); }
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .metric-label { color: var(--muted); margin-top: 6px; font-size: 0.85rem; }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.7rem; }
+            .bit-cell { width: 10px; height: 32px; font-size: 5px; }
+            .code-block { font-size: 0.78rem; padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>HSH-64 原理动画演示</h1>
+            <p class="subtitle">Hierarchical Semantic Hashing · 64 位可学习语义哈希</p>
+        </header>
+
+        <div class="stage-nav" id="stageNav"></div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+
+        <div class="main-stage">
+            <!-- Scene 0: Intro -->
+            <div class="scene active" data-scene="0">
+                <h2 class="scene-title">HSH-64 全景概览</h2>
+                <p class="scene-desc">一个面向轻量化语义检索的 64 位层次化语义哈希方案</p>
+                <div class="metrics-grid">
+                    <div class="metric-card"><div class="metric-value">64 bit</div><div class="metric-label">结构化编码</div></div>
+                    <div class="metric-card"><div class="metric-value">585 KB</div><div class="metric-label">在线编码器</div></div>
+                    <div class="metric-card"><div class="metric-value">3 阶段</div><div class="metric-label">训练流程</div></div>
+                    <div class="metric-card"><div class="metric-value">2 阶段</div><div class="metric-label">检索架构</div></div>
+                </div>
+                <div class="info-panel">
+                    <strong>HSH-64</strong> 将高维连续嵌入压缩为单个 64 位整数，通过 <strong>POPCNT</strong> 指令实现极速 Hamming 距离计算。核心设计将 64 位划分为 <span style="color:#60a5fa">feat(4)</span>、<span style="color:#f59e0b">sim(52)</span>、<span style="color:#34d399">abs(8)</span> 三个字段，分别负责粗粒度分类、语义相似度和簇内消歧。
+                </div>
+            </div>
+
+            <!-- Scene 1: Bit Layout -->
+            <div class="scene" data-scene="1">
+                <h2 class="scene-title">结构化 64 位编码</h2>
+                <p class="scene-desc">feat(4) + sim(52) + abs(8) = 一个 u64</p>
+                <div class="bit-strip-container">
+                    <div class="bit-strip" id="bitStrip"></div>
+                    <div class="field-labels">
+                        <div class="field-tag" id="labelFeat"><div class="field-color" style="background: #3b82f6;"></div><span>feat（4 位）· 词性/粗分类</span></div>
+                        <div class="field-tag" id="labelSim"><div class="field-color" style="background: #f59e0b;"></div><span>sim（52 位）· 语义相似度</span></div>
+                        <div class="field-tag" id="labelAbs"><div class="field-color" style="background: #10b981;"></div><span>abs（8 位）· 簇内完美哈希</span></div>
+                    </div>
+                </div>
+                <div class="formula-block">
+                    $$ c = \underbrace{(f_3 f_2 f_1 f_0)}_{\text{feat}: 4} \;\|\; \underbrace{(s_{51} \cdots s_1 s_0)}_{\text{sim}: 52} \;\|\; \underbrace{(a_7 \cdots a_1 a_0)}_{\text{abs}: 8} $$
+                </div>
+                <div class="two-col">
+                    <div class="card">
+                        <h4>feat 字段</h4>
+                        <ul>
+                            <li>4 位，16 个粗粒度类别</li>
+                            <li>对应词性、语义大类等先验</li>
+                            <li>可作为硬过滤条件</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>sim 字段</h4>
+                        <ul>
+                            <li>52 位，核心语义相似信号</li>
+                            <li>$2^{52} \approx 4.5 \times 10^{15}$ 种状态</li>
+                            <li>由 Deep Hash MLP 学习得到</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>abs 字段</h4>
+                        <ul>
+                            <li>8 位，256 个唯一标识</li>
+                            <li>簇内完美哈希，用于消歧</li>
+                            <li>作为平手打破者而非语义信号</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Hamming 距离</h4>
+                        <ul>
+                            <li>两个编码一次 XOR</li>
+                            <li>CPU POPCNT 单指令计数</li>
+                            <li>距离越小，语义越接近</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="formula-block">
+                    $$ d_H(c, c') = \operatorname{popcnt}(c \oplus c') $$
+                </div>
+                <div class="hamming-demo">
+                    <div style="color:var(--muted);">Hamming 距离计算示例：XOR + POPCNT</div>
+                    <div class="code-row" id="codeA"></div>
+                    <div class="code-row" id="codeB"></div>
+                    <div class="code-row" id="codeDiff"></div>
+                </div>
+            </div>
+
+            <!-- Scene 2: Training I -->
+            <div class="scene" data-scene="2">
+                <h2 class="scene-title">阶段 1：连续预训练</h2>
+                <p class="scene-desc">用强教师模型（bge-large）蒸馏轻量学生</p>
+                <div class="search-flow" id="s2-flow" style="margin: 28px 0; gap: 18px;">
+                    <div class="flow-node" id="s2-input" style="min-width: 130px;">
+                        <div style="font-size: 1.05rem; font-weight: 600;">bge-small</div>
+                        <div style="color:var(--muted); font-size:0.8rem; margin-top:4px;">512 维输入 $\mathbf{x}_i$</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node" id="s2-mlp" style="min-width: 120px; border-color:#3b82f6; background:rgba(59,130,246,0.08);">
+                        <div style="font-size: 1.05rem; font-weight: 600;">MLP 投影器</div>
+                        <div style="color:var(--muted); font-size:0.75rem; margin-top:4px;">512 → H → 52</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node" id="s2-logit" style="min-width: 140px;">
+                        <div style="font-size: 1.05rem; font-weight: 600;">52 维 logit</div>
+                        <div style="color:var(--muted); font-size:0.8rem; margin-top:4px;">$\mathbf{u}_i = f_\theta(\mathbf{x}_i)$</div>
+                    </div>
+                    <div class="flow-arrow">≈</div>
+                    <div class="flow-node" id="s2-teacher" style="min-width: 140px; border-color:#f59e0b;">
+                        <div style="font-size: 1.05rem; font-weight: 600;">bge-large</div>
+                        <div style="color:var(--muted); font-size:0.8rem; margin-top:4px;">1024 维教师 $\mathbf{t}_i$</div>
+                    </div>
+                </div>
+                <div class="formula-block">
+                    $$ \mathcal{L}_{\text{MSE}} = \frac{1}{N} \sum_{i=1}^{N} \bigl\| f_\theta(\mathbf{x}_i - \boldsymbol{\mu}) - \mathbf{t}_i \bigr\|^2 $$
+                </div>
+                <div class="two-col">
+                    <div class="card">
+                        <h4>输入中心化</h4>
+                        <p>训练集均值 $\boldsymbol{\mu}$ 预先计算，输入先减去均值，提升训练稳定性：</p>
+                        <p style="margin-top:6px;">$\mathbf{u}_i = f_\theta(\mathbf{x}_i - \boldsymbol{\mu})$</p>
+                    </div>
+                    <div class="card">
+                        <h4>教师-学生蒸馏</h4>
+                        <ul>
+                            <li>教师：bge-large（1024 维）</li>
+                            <li>学生：MLP 投影器（585 KB）</li>
+                            <li>目标：学生 logit 逼近教师嵌入</li>
+                            <li>保留语义邻域结构</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="info-panel">
+                    阶段 1 只在<strong>连续空间</strong>优化，避免 sign 函数的梯度消失问题。它让轻量 MLP 先学到与强教师模型一致的语义拓扑，为后续离散化打下良好基础。
+                </div>
+            </div>
+
+            <!-- Scene 3: Training II -->
+            <div class="scene" data-scene="3">
+                <h2 class="scene-title">阶段 2：STE 离散精调</h2>
+                <p class="scene-desc">符号量化 + 直通估计器，让二值码可训练</p>
+                <div class="pipeline" style="justify-content: center;">
+                    <div class="pipe-step" id="s2-step1">
+                        <h3>连续 Logit</h3>
+                        <ul>
+                            <li>$\mathbf{u} \in \mathbb{R}^{52}$</li>
+                            <li>前向传播使用</li>
+                            <li>可微分</li>
+                        </ul>
+                    </div>
+                    <div class="arrow-between">→</div>
+                    <div class="pipe-step" id="s2-step2">
+                        <h3>Sign 量化</h3>
+                        <ul>
+                            <li>$\mathbf{b} = \operatorname{sign}(\mathbf{u})$</li>
+                            <li>$\mathbf{b} \in \{-1,+1\}^{52}$</li>
+                            <li>用于 Hamming 距离</li>
+                        </ul>
+                    </div>
+                    <div class="arrow-between">→</div>
+                    <div class="pipe-step" id="s2-step3">
+                        <h3>STE 回传</h3>
+                        <ul>
+                            <li>前向：硬量化</li>
+                            <li>反向：梯度直传</li>
+                            <li>$\frac{\partial \mathbf{b}}{\partial \mathbf{u}} \approx \mathbf{I}$</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="formula-block">
+                    $$ \operatorname{sign}(u) = \begin{cases} +1, & u \ge 0 \\ -1, & u < 0 \end{cases} $$
+                </div>
+                <div class="code-block">
+<span class="com"># 前向传播</span>
+<span class="var">b</span> = <span class="fn">sign</span>(<span class="var">u</span>)        <span class="com"># 硬量化，输出 ±1</span>
+<span class="var">loss</span> = <span class="fn">recall_loss</span>(<span class="var">b</span>, <span class="var">targets</span>)
+
+<span class="com"># 反向传播（STE）</span>
+<span class="com"># sign(u) 的导数在原点外为 0，但 STE 把梯度直接传回 u</span>
+<span class="var">grad_u</span> = <span class="var">grad_b</span>.<span class="fn">clone</span>()  <span class="com"># ∂b/∂u ≈ I</span>
+                </div>
+                <div class="info-panel">
+                    sign 函数几乎处处梯度为零，无法直接反向传播。<strong>STE（Straight-Through Estimator）</strong>在<strong>前向传播</strong>时使用硬量化，在<strong>反向传播</strong>时把梯度原样传回量化前的 logit，实现端到端的离散码学习。
+                </div>
+            </div>
+
+            <!-- Scene 4: Training III -->
+            <div class="scene" data-scene="4">
+                <h2 class="scene-title">阶段 3：贪心后处理</h2>
+                <p class="scene-desc">直接在离散码上优化 Recall@K</p>
+                <div class="pipeline" style="justify-content: center;">
+                    <div class="pipe-step" id="s3-step1">
+                        <h3>评估当前码</h3>
+                        <ul>
+                            <li>计算 Hamming 距离</li>
+                            <li>得到 Recall@K</li>
+                            <li>记录基准 R₀</li>
+                        </ul>
+                    </div>
+                    <div class="arrow-between">→</div>
+                    <div class="pipe-step" id="s3-step2">
+                        <h3>尝试翻转比特</h3>
+                        <ul>
+                            <li>遍历候选位 j</li>
+                            <li>翻转 b_j → b'_j</li>
+                            <li>计算 ΔRecall</li>
+                        </ul>
+                    </div>
+                    <div class="arrow-between">→</div>
+                    <div class="pipe-step" id="s3-step3">
+                        <h3>保留提升</h3>
+                        <ul>
+                            <li>若 ΔRecall > 0 接受翻转</li>
+                            <li>多轮迭代直到收敛</li>
+                            <li>避免陷入局部最优</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="code-block">
+<span class="kw">for</span> <span class="var">iter</span> <span class="kw">in</span> <span class="fn">range</span>(max_iters):
+    <span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span>(N):
+        <span class="var">best_delta</span> = <span class="num">0</span>
+        <span class="var">best_bit</span> = <span class="var">None</span>
+        <span class="kw">for</span> <span class="var">j</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">52</span>):
+            <span class="var">code_i</span>.<span class="fn">flip</span>(j)
+            <span class="var">delta</span> = <span class="fn">compute_recall_delta</span>(<span class="var">code_i</span>)
+            <span class="kw">if</span> <span class="var">delta</span> > <span class="var">best_delta</span>:
+                <span class="var">best_delta</span>, <span class="var">best_bit</span> = <span class="var">delta</span>, j
+            <span class="var">code_i</span>.<span class="fn">flip</span>(j)  <span class="com"># 恢复，尝试下一位</span>
+        <span class="kw">if</span> <span class="var">best_bit</span> <span class="kw">is not None</span>:
+            <span class="var">code_i</span>.<span class="fn">flip</span>(<span class="var">best_bit</span>)
+                </div>
+                <div class="flip-grid" id="flipGrid"></div>
+                <div class="info-panel">
+                    后处理跳出梯度近似，直接以 Recall 为目标函数进行贪心比特翻转。这是从约 0.69 提升到 <strong>0.74 Recall@10</strong> 的关键步骤，通常只需 5–10 轮迭代即可收敛。
+                </div>
+            </div>
+
+            <!-- Scene 5: MIH Index -->
+            <div class="scene" data-scene="5">
+                <h2 class="scene-title">MIH 多索引哈希</h2>
+                <p class="scene-desc">将 52 位 sim 码切分为 13 段，构建倒排索引</p>
+                <div class="mih-visual">
+                    <div style="color:var(--muted); margin-bottom:4px;">52 位 sim 码 = 13 段 × 4 位</div>
+                    <div class="segments-row" id="mihSegments"></div>
+                    <div style="color:var(--muted); margin:12px 0 4px;">每段映射到 $2^4 = 16$ 条倒排索引</div>
+                    <div class="index-table" id="mihIndex"></div>
+                </div>
+                <div class="formula-block">
+                    $$ \text{segment}_s = \text{sim}[4s : 4s+4], \quad s = 0, \dots, 12 $$
+                </div>
+                <div class="code-block">
+<span class="com"># 构建 MIH 索引</span>
+<span class="kw">for</span> <span class="var">s</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">13</span>):            <span class="com"># 13 段</span>
+    <span class="kw">for</span> <span class="var">i</span>, <span class="var">code</span> <span class="kw">in</span> <span class="fn">enumerate</span>(codes):
+        <span class="var">seg_val</span> = <span class="fn">extract_bits</span>(code, <span class="var">s</span>*<span class="num">4</span>, <span class="num">4</span>)
+        <span class="var">index</span>[s][seg_val].<span class="fn">append</span>(i)
+                </div>
+                <div class="info-panel">
+                    MIH 将长二进制码拆成多个短子串，为每个子串建倒排索引。查询时只需枚举每段在 Hamming 半径内的可能取值，再合并候选列表，检索复杂度从线性降至亚线性。
+                </div>
+            </div>
+
+            <!-- Scene 6: Online Retrieval -->
+            <div class="scene" data-scene="6">
+                <h2 class="scene-title">在线检索流程</h2>
+                <p class="scene-desc">轻量编码 + MIH 粗排 + 可选精排</p>
+                <div class="search-flow" id="searchFlow">
+                    <div class="flow-node" id="sf-query"><div style="font-weight:600;">查询词</div></div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node" id="sf-enc"><div style="font-weight:600;">bge-small</div><div style="color:var(--muted); font-size:0.75rem;">512 维</div></div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node" id="sf-mlp"><div style="font-weight:600;">MLP</div><div style="color:var(--muted); font-size:0.75rem;">585 KB</div></div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node" id="sf-hsh"><div style="font-weight:600;">HSH-64</div><div style="color:var(--muted); font-size:0.75rem;">编码</div></div>
+                </div>
+                <div class="mih-visual">
+                    <div style="color:var(--muted); margin-bottom:8px;">查询 sim 码分段检索</div>
+                    <div class="segments-row" id="mihSegmentsQuery"></div>
+                    <div style="color:var(--muted); margin:12px 0 8px;">半径扩展：枚举每段 $\lfloor r/B \rfloor$ 范围内的段码</div>
+                    <div class="radius-visual" id="radiusVisual"></div>
+                    <div class="search-flow" style="margin-top:18px;">
+                        <div class="flow-node" id="sf-cand"><div style="font-weight:600;">候选池</div><div style="color:var(--muted); font-size:0.75rem;">≈187 项</div></div>
+                        <div class="flow-arrow">⇢</div>
+                        <div class="flow-node" id="sf-rerank" style="border-style:dashed;"><div style="font-weight:600;">bge-large</div><div style="color:var(--muted); font-size:0.75rem;">精排（可选）</div></div>
+                        <div class="flow-arrow">⇢</div>
+                        <div class="flow-node" id="sf-result"><div style="font-weight:600;">Top-K</div><div style="color:var(--muted); font-size:0.75rem;">结果</div></div>
+                    </div>
+                </div>
+                <div class="code-block">
+<span class="com"># MIH 查询：枚举并合并候选</span>
+<span class="var">candidates</span> = <span class="fn">set</span>()
+<span class="var">r_seg</span> = <span class="var">r</span> // B                    <span class="com"># 每段允许半径</span>
+<span class="kw">for</span> <span class="var">s</span> <span class="kw">in</span> <span class="fn">range</span>(B):              <span class="com"># B = 13 段</span>
+    <span class="var">q_seg</span> = <span class="fn">extract_bits</span>(query, s*<span class="num">4</span>, <span class="num">4</span>)
+    <span class="kw">for</span> <span class="var">seg_val</span> <span class="kw">in</span> <span class="fn">hamming_ball</span>(q_seg, <span class="var">r_seg</span>):
+        <span class="var">candidates</span>.<span class="fn">update</span>(index[s][seg_val])
+<span class="kw">return</span> <span class="fn">rerank_by_embedding</span>(candidates)[:K]
+                </div>
+                <div class="info-panel">
+                    查询首先由轻量编码器生成 HSH-64 码，MIH 粗排快速召回约 187 个候选。可选的 bge-large 精排器对候选进行精确重排。在线栈（不含精排器）仅需约 <strong>700 KB</strong>。
+                </div>
+            </div>
+
+            <!-- Scene 7: Asymmetric Distance -->
+            <div class="scene" data-scene="7">
+                <h2 class="scene-title">非对称距离评分</h2>
+                <p class="scene-desc">查询端用原始 logit，文档端用二值码</p>
+                <div class="two-col">
+                    <div class="card">
+                        <h4>对称距离</h4>
+                        <p>查询和文档都量化成二值码后比较 Hamming 距离。</p>
+                        <p style="margin-top:8px;">$d_H(q, d) = \operatorname{popcnt}(q \oplus d)$</p>
+                        <p style="color:var(--muted); margin-top:8px;">存在量化损失。</p>
+                    </div>
+                    <div class="card">
+                        <h4>非对称距离</h4>
+                        <p>查询端保留连续 logit，文档端使用二值码。</p>
+                        <p style="margin-top:8px;">$s(q, d) = \sum_{j} \operatorname{sign}(u_j) \cdot u_j$</p>
+                        <p style="color:var(--muted); margin-top:8px;">减少查询端量化误差。</p>
+                    </div>
+                </div>
+                <div class="formula-block">
+                    $$ s_{\text{asym}}(q, i) = \mathbf{u}_q^\top \mathbf{b}_i = \sum_{j=1}^{52} u_{q,j} \cdot b_{i,j} $$
+                </div>
+                <div class="info-panel">
+                    非对称评分让在线查询保留更多连续信息，同时文档端仍享受二值存储的高效率。这是提升检索精度的另一项关键技术。
+                </div>
+            </div>
+
+            <!-- Scene 8: Results -->
+            <div class="scene" data-scene="8">
+                <h2 class="scene-title">实验结果</h2>
+                <p class="scene-desc">3,109 词中文词表基准</p>
+                <div class="metrics-grid">
+                    <div class="metric-card"><div class="metric-value">0.7404</div><div class="metric-label">单模型 Recall@10</div></div>
+                    <div class="metric-card"><div class="metric-value">0.7724</div><div class="metric-label">4 模型集成 Recall@10</div></div>
+                    <div class="metric-card"><div class="metric-value">0.8970</div><div class="metric-label">MIH + 精排 Recall@10</div></div>
+                    <div class="metric-card"><div class="metric-value">0.54 ms</div><div class="metric-label">仅 MIH 查询延迟</div></div>
+                </div>
+                <div class="two-col">
+                    <div class="card">
+                        <h4>模型体积</h4>
+                        <ul>
+                            <li>MLP 投影器：585 KB</li>
+                            <li>码本：25 KB</li>
+                            <li>MIH 索引：81 KB</li>
+                            <li>在线栈总计：≈700 KB</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>性能对比</h4>
+                        <ul>
+                            <li>PCA-52：≈0.45 Recall@10</li>
+                            <li>DH + Post：0.74 Recall@10</li>
+                            <li>4 模型集成：0.77 Recall@10</li>
+                            <li>两阶段系统：0.90 Recall@10</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="info-panel">
+                    HSH-64 在纯 Hamming 空间即可达到与暴力嵌入检索接近的召回率，同时保持极小的模型体积和毫秒级查询延迟，适合边缘设备部署。
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-secondary" id="btnPrev">上一步</button>
+            <button class="btn-primary" id="btnAuto">自动播放</button>
+            <button class="btn-secondary" id="btnNext">下一步</button>
+            <button class="btn-secondary" id="btnReset">重置</button>
+        </div>
+    </div>
+
+    <script>
+        const totalScenes = 9;
+        let currentScene = 0;
+        let autoPlayInterval = null;
+
+        const navContainer = document.getElementById('stageNav');
+        const sceneTitles = ['概览', '编码结构', '训练Ⅰ', '训练Ⅱ', '训练Ⅲ', 'MIH索引', '检索流程', '非对称距离', '实验结果'];
+        for (let i = 0; i < totalScenes; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'stage-dot' + (i === 0 ? ' active' : '');
+            dot.title = sceneTitles[i];
+            dot.addEventListener('click', () => { stopAutoPlay(); goToScene(i); });
+            navContainer.appendChild(dot);
+        }
+
+        function renderMath() {
+            if (window.renderMathInElement) {
+                renderMathInElement(document.querySelector('.main-stage'), {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+        }
+
+        function updateProgress() {
+            document.getElementById('progressFill').style.width = (currentScene / (totalScenes - 1) * 100) + '%';
+            document.querySelectorAll('.stage-dot').forEach((dot, idx) => {
+                dot.classList.remove('active', 'completed');
+                if (idx === currentScene) dot.classList.add('active');
+                else if (idx < currentScene) dot.classList.add('completed');
+            });
+        }
+
+        function goToScene(scene) {
+            if (scene < 0 || scene >= totalScenes) return;
+            document.querySelectorAll('.scene').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.scene[data-scene="${scene}"]`).classList.add('active');
+            currentScene = scene;
+            updateProgress();
+            runSceneAnimations(scene);
+            setTimeout(renderMath, 50);
+        }
+
+        function runSceneAnimations(scene) {
+            document.querySelectorAll('.bit-cell, .field-tag, .pipe-step, .flow-node, .metric-card, .arrow-between, .radius-box').forEach(el => {
+                el.classList.remove('show', 'active', 'highlight');
+            });
+            document.querySelectorAll('.seg-block, .index-cell').forEach(el => el.classList.remove('active'));
+
+            if (scene === 0) {
+                setTimeout(() => {
+                    document.querySelectorAll('.metric-card').forEach((card, i) => setTimeout(() => card.classList.add('show'), i * 120));
+                }, 80);
+            }
+            else if (scene === 1) {
+                renderBitStrip();
+                setTimeout(() => {
+                    document.querySelectorAll('.bit-cell').forEach((cell, i) => setTimeout(() => cell.classList.add('show'), i * 20));
+                    setTimeout(() => {
+                        ['labelFeat', 'labelSim', 'labelAbs'].forEach((id, i) => setTimeout(() => document.getElementById(id).classList.add('show'), i * 180));
+                    }, 700);
+                    setTimeout(() => animateHamming(), 1600);
+                }, 80);
+            }
+            else if (scene === 2) {
+                setTimeout(() => {
+                    ['s2-input', 's2-mlp', 's2-logit', 's2-teacher'].forEach((id, i) => setTimeout(() => {
+                        const el = document.getElementById(id);
+                        if (el) el.classList.add('show');
+                    }, i * 180));
+                }, 80);
+            }
+            else if (scene === 3) {
+                setTimeout(() => {
+                    const steps = ['#s2-step1', '#s2-step2', '#s2-step3'];
+                    const arrows = document.querySelectorAll('.scene[data-scene="3"] .arrow-between');
+                    steps.forEach((sel, i) => {
+                        setTimeout(() => {
+                            document.querySelector(sel).classList.add('show');
+                            if (arrows[i]) arrows[i].classList.add('show');
+                        }, i * 550);
+                    });
+                }, 80);
+            }
+            else if (scene === 4) {
+                setTimeout(() => {
+                    const steps = ['#s3-step1', '#s3-step2', '#s3-step3'];
+                    const arrows = document.querySelectorAll('.scene[data-scene="4"] .arrow-between');
+                    steps.forEach((sel, i) => {
+                        setTimeout(() => {
+                            document.querySelector(sel).classList.add('show');
+                            if (arrows[i]) arrows[i].classList.add('show');
+                        }, i * 550);
+                    });
+                    setTimeout(() => animateBitFlips(), 2000);
+                }, 80);
+            }
+            else if (scene === 5) {
+                renderMih('mihSegments', 'mihIndex');
+                setTimeout(() => animateMihFull(), 500);
+            }
+            else if (scene === 6) {
+                renderMih('mihSegmentsQuery', null, true);
+                const flowIds = ['sf-query', 'sf-enc', 'sf-mlp', 'sf-hsh', 'sf-cand', 'sf-rerank', 'sf-result'];
+                setTimeout(() => {
+                    flowIds.forEach((id, i) => setTimeout(() => {
+                        const el = document.getElementById(id);
+                        if (el) el.classList.add('show');
+                    }, i * 220));
+                    setTimeout(() => animateRadius(), 1600);
+                }, 80);
+            }
+            else if (scene === 7) {
+                setTimeout(() => {
+                    document.querySelectorAll('.scene[data-scene="7"] .card').forEach((c, i) => setTimeout(() => c.classList.add('show'), i * 200));
+                }, 80);
+            }
+            else if (scene === 8) {
+                setTimeout(() => {
+                    document.querySelectorAll('.scene[data-scene="8"] .metric-card').forEach((card, i) => setTimeout(() => card.classList.add('show'), i * 120));
+                }, 80);
+            }
+        }
+
+        function renderBitStrip() {
+            const strip = document.getElementById('bitStrip');
+            strip.innerHTML = '';
+            for (let i = 63; i >= 0; i--) {
+                const cell = document.createElement('div');
+                cell.className = 'bit-cell';
+                if (i >= 60) cell.classList.add('feat');
+                else if (i >= 8) cell.classList.add('sim');
+                else cell.classList.add('abs');
+                cell.textContent = i;
+                strip.appendChild(cell);
+            }
+        }
+
+        function animateHamming() {
+            const len = 16;
+            const a = Array.from({length: len}, () => Math.random() > 0.5 ? 1 : 0);
+            const b = a.map((v, i) => i % 4 === 0 ? 1 - v : v);
+            renderCodeRow('codeA', a, false, 'Code A');
+            renderCodeRow('codeB', b, false, 'Code B');
+            setTimeout(() => {
+                renderCodeRow('codeDiff', a.map((v, i) => v ^ b[i] ? 'diff' : v), true, 'A XOR B');
+            }, 500);
+        }
+
+        function renderCodeRow(id, bits, isDiff, labelText) {
+            const row = document.getElementById(id);
+            row.innerHTML = '';
+            const label = document.createElement('div');
+            label.style.cssText = 'width:70px; color:#94a3b8; font-size:0.8rem; display:flex; align-items:center;';
+            label.textContent = labelText;
+            row.appendChild(label);
+            bits.forEach(bit => {
+                const cell = document.createElement('div');
+                cell.className = 'code-bit';
+                if (isDiff && bit === 'diff') cell.classList.add('diff');
+                else if (bit === 1 || bit === 'diff') cell.classList.add('one');
+                else cell.classList.add('zero');
+                cell.textContent = bit === 'diff' ? '1' : bit;
+                row.appendChild(cell);
+            });
+            if (isDiff) {
+                const popcnt = bits.filter(b => b === 'diff').length;
+                const res = document.createElement('div');
+                res.style.cssText = 'margin-left:12px; color:#34d399; font-weight:600; display:flex; align-items:center; font-size:0.9rem;';
+                res.textContent = `POPCNT = ${popcnt}`;
+                row.appendChild(res);
+            }
+        }
+
+        function renderMih(segId, idxId, readonly) {
+            const segContainer = document.getElementById(segId);
+            if (!segContainer) return;
+            segContainer.innerHTML = '';
+            for (let s = 0; s < 13; s++) {
+                const bits = Array.from({length: 4}, () => Math.random() > 0.5 ? 1 : 0).join('');
+                const div = document.createElement('div');
+                div.className = 'seg-block';
+                div.id = `${segId}-seg-${s}`;
+                div.innerHTML = `<div>段 ${s}</div><div class="seg-bits">${bits}</div>`;
+                segContainer.appendChild(div);
+            }
+            if (idxId) {
+                const idxContainer = document.getElementById(idxId);
+                idxContainer.innerHTML = '';
+                for (let i = 0; i < 16; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'index-cell';
+                    cell.id = `${idxId}-idx-${i}`;
+                    cell.textContent = i.toString(2).padStart(4, '0');
+                    idxContainer.appendChild(cell);
+                }
+            }
+        }
+
+        function animateMihFull() {
+            let s = 0;
+            const interval = setInterval(() => {
+                if (s >= 13) {
+                    clearInterval(interval);
+                    return;
+                }
+                document.querySelectorAll('#mihSegments .seg-block').forEach(el => el.classList.remove('active'));
+                const seg = document.getElementById(`mihSegments-seg-${s}`);
+                seg.classList.add('active');
+                const bitsText = seg.querySelector('.seg-bits').textContent;
+                const idx = parseInt(bitsText, 2);
+                document.querySelectorAll('#mihIndex .index-cell').forEach(el => el.classList.remove('active'));
+                const idxCell = document.getElementById(`mihIndex-idx-${idx}`);
+                if (idxCell) idxCell.classList.add('active');
+                s++;
+            }, 320);
+        }
+
+        function animateRadius() {
+            const container = document.getElementById('radiusVisual');
+            container.innerHTML = '';
+            const radii = [
+                {r: 0, n: 1, label: 'r_seg=0'},
+                {r: 1, n: 5, label: 'r_seg=1'},
+                {r: 2, n: 11, label: 'r_seg=2'},
+                {r: 3, n: 15, label: 'r_seg=3'}
+            ];
+            radii.forEach((item, i) => {
+                const box = document.createElement('div');
+                box.className = 'radius-box';
+                box.innerHTML = `<div style="font-weight:700; color:var(--accent);">${item.label}</div><div style="font-size:1.6rem; margin:6px 0;">${item.n}</div><div style="font-size:0.8rem; color:var(--muted);">枚举数</div>`;
+                container.appendChild(box);
+                setTimeout(() => {
+                    box.classList.add('show');
+                    if (i === radii.length - 1) box.classList.add('active');
+                }, i * 250);
+            });
+            setTimeout(() => {
+                document.getElementById('sf-cand').classList.add('highlight');
+            }, 1400);
+        }
+
+        function animateBitFlips() {
+            const grid = document.getElementById('flipGrid');
+            grid.innerHTML = '';
+            const examples = [
+                {label: '原始编码', recall: '0.6923', flip: null, changed: false},
+                {label: '尝试翻转 bit-7', recall: '0.6915 ↓', flip: 7, changed: false},
+                {label: '尝试翻转 bit-23', recall: '0.6941 ↑', flip: 23, changed: true},
+                {label: '接受翻转后', recall: '0.6941', flip: 23, changed: false, accepted: true}
+            ];
+            const base = '101100110101011000111010011001101011001101010110';
+            examples.forEach((ex, i) => {
+                const card = document.createElement('div');
+                card.className = 'flip-card';
+                let bits = base.split('');
+                if (ex.flip !== null) bits[ex.flip] = bits[ex.flip] === '1' ? '0' : '1';
+                let bitsHtml = bits.map((b, j) => {
+                    let cls = 'flip-bit ' + (b === '1' ? 'one' : 'zero');
+                    if (ex.flip === j && !ex.accepted) cls += ' changed';
+                    if (ex.flip === j && ex.accepted) cls += ' accepted';
+                    return `<div class="${cls}">${b}</div>`;
+                }).join('');
+                card.innerHTML = `<h5>${ex.label}</h5><div class="flip-bits">${bitsHtml}</div><div class="recall-value">Recall@10 = ${ex.recall}</div>`;
+                grid.appendChild(card);
+                setTimeout(() => card.style.opacity = '1', i * 300);
+                card.style.opacity = '0';
+                card.style.transition = 'opacity 0.4s ease';
+            });
+        }
+
+        document.getElementById('btnPrev').addEventListener('click', () => { stopAutoPlay(); goToScene(currentScene - 1); });
+        document.getElementById('btnNext').addEventListener('click', () => { stopAutoPlay(); goToScene(currentScene + 1); });
+        document.getElementById('btnReset').addEventListener('click', () => { stopAutoPlay(); goToScene(0); });
+        document.getElementById('btnAuto').addEventListener('click', () => {
+            if (autoPlayInterval) stopAutoPlay(); else startAutoPlay();
+        });
+
+        function startAutoPlay() {
+            document.getElementById('btnAuto').textContent = '停止播放';
+            autoPlayInterval = setInterval(() => {
+                goToScene(currentScene >= totalScenes - 1 ? 0 : currentScene + 1);
+            }, 4500);
+        }
+
+        function stopAutoPlay() {
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+                document.getElementById('btnAuto').textContent = '自动播放';
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') { stopAutoPlay(); goToScene(currentScene - 1); }
+            else if (e.key === 'ArrowRight') { stopAutoPlay(); goToScene(currentScene + 1); }
+        });
+
+        // Initial
+        runSceneAnimations(0);
+        setTimeout(renderMath, 300);
+    </script>
+</body>
+</html>
