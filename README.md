@@ -2,6 +2,8 @@
 
 HSH-64 是面向轻量化中文词表级语义检索的 64 位可学习语义哈希方案。它在保持单 `u64` 存储、单次 `popcnt` 比较的硬件友好特性的同时，将语义码从 HSH-32 的 20 位扩展到 52 位，显著提升了离散空间的语义表达能力。
 
+> **论文摘要**：语义哈希将高维连续嵌入映射为紧凑二进制码，以极小内存占用实现次线性近似最近邻（ANN）检索。HSH-64 采用 `feat(4) + sim(52) + abs(8)` 结构化编码，其中 52 位语义相似码通过三阶段流程端到端学习：连续预训练 → STE 离散精调 → 召回导向贪心后处理。在线检索集成自适应 MIH 粗排、非对称距离评分与可选的 bge-large 精排。在 3,109 词中文词表上，最佳单模型（h512，1.17 MB）纯 Hamming 空间 Recall@10 达 **0.7404**，轻量化模型（h256，585 KB）达 **0.7382**，四模型集成达 **0.7724**，完整两阶段系统达 **0.8970**。
+
 ---
 
 ## 项目定位与核心特性
@@ -74,6 +76,36 @@ let dist = (a ^ b).count_ones();
 
 ---
 
+## 预训练模型与 Release 资源
+
+为便于复现与直接使用，本项目在 [GitHub Releases](https://github.com/Sauomore/Cabinet_hsh64/releases) 提供已训练好的模型与缓存，无需从头训练即可运行评测。
+
+### 推荐资源包
+
+| 资源包 | 大小 | 内容 | 适用场景 |
+|---|---|---|---|
+| `hsh64_pretrained_3109_light.zip` | ~18 MB | 词表 3109 + bge-small 缓存 + bge-large 缓存 + PCA-52 + Deep Hash h256 s2025 + sim_override | 轻量化部署，585 KB 模型 |
+| `hsh64_pretrained_3109_best.zip` | ~18 MB | 词表 3109 + bge-small 缓存 + bge-large 缓存 + Deep Hash h512 s42 + sim_override（最佳单模型） | 最佳纯 Hamming 召回 |
+| `hsh64_pretrained_3109_full.zip` | ~22 MB | 词表 3109 + bge-small/bge-large 缓存 + PCA + 多个 Deep Hash 模型 + 多组后处理 | 完整复现/Ensemble |
+
+### 资源包内关键文件
+
+```text
+hsh64_pretrained_3109_light/
+├── vocab_3109.txt                              # 3109 词中文词表
+├── embedding_3109.cache                        # bge-small 学生嵌入缓存
+├── reranker_3109_large.cache                   # bge-large 教师/精排嵌入缓存
+├── pca_52.bin                                  # PCA-52 投影
+├── deep_hash_v3_64_3109_h256_s2025.bin         # Deep Hash v3 模型（585 KB）
+└── sim_override_3109_h256_s2025_recall_mi100.bin  # 召回导向后处理覆盖码
+```
+
+下载并解压到 `tests/data/` 后即可直接运行下方示例命令。
+
+> **注意**：Git 仓库本身不包含 `.bin`/`.cache` 等大型二进制文件（见 [.gitignore](.gitignore)），请通过 Release 页面下载。
+
+---
+
 ## 项目结构
 
 ```text
@@ -108,17 +140,17 @@ hsh64/
 ├── tests/                  # Rust 集成测试与数据
 │   ├── end_to_end.rs
 │   └── data/
-│       ├── vocab_3109.txt
-│       ├── embedding.cache
-│       ├── reranker_embedding.cache
-│       ├── pca_52.bin
-│       ├── deep_hash_v3_64_3109_h256_s2025.bin
-│       └── ...
-└── paper/                  # 论文源码与数学证明
-    ├── main.tex
-    ├── main_chinese.tex
-    ├── references.bib
-    └── math_proofs.pdf
+├── docs/                   # 设计文档与实验报告
+│   ├── explained.md        # HSH-64 通俗设计文档
+│   ├── explained.pdf       # 设计文档 PDF
+│   ├── experiment_data_export.md  # 实验数据汇总
+│   └── hsh64_principle.html
+└── paper/                  # 论文源码与 PDF
+    ├── main.tex            # 英文论文 LaTeX 源码
+    ├── main.pdf            # 英文论文 PDF
+    ├── main_chinese.tex    # 中文论文 LaTeX 源码
+    ├── main_chinese.pdf    # 中文论文 PDF
+    └── references.bib      # 参考文献
 ```
 
 ---
@@ -149,7 +181,32 @@ python -m pip install sentence-transformers numpy torch scikit-learn
 
 ## 完整使用流程
 
-### 1. 准备词表
+### 方式一：使用 Release 预训练资源（推荐）
+
+1. 从 [Releases](https://github.com/Sauomore/Cabinet_hsh64/releases) 下载 `hsh64_pretrained_3109_light.zip`。
+2. 解压到 `tests/data/`。
+3. 直接运行评测：
+
+```bash
+# 纯 HSH-64 暴力扫描
+cargo run --release --example benchmark_pure_hsh64 -- \
+    --embedding tests/data/embedding_3109.cache \
+    --deep-hash tests/data/deep_hash_v3_64_3109_h256_s2025.bin \
+    --sim-override tests/data/sim_override_3109_h256_s2025_recall_mi100.bin \
+    --top-k 10 --queries 3109
+
+# MIH 自适应搜索 + bge-large 精排
+cargo run --release --example benchmark_pure_hsh64 -- \
+    --embedding tests/data/embedding_3109.cache \
+    --reranker tests/data/reranker_3109_large.cache \
+    --deep-hash tests/data/deep_hash_v3_64_3109_h256_s2025.bin \
+    --sim-override tests/data/sim_override_3109_h256_s2025_recall_mi100.bin \
+    --top-k 10 --queries 3109 --adaptive --coarse-factor 10 --segment-counts 13
+```
+
+### 方式二：从头训练
+
+#### 1. 准备词表
 
 词表文件每行一个词：
 
@@ -161,7 +218,7 @@ python -m pip install sentence-transformers numpy torch scikit-learn
 ...
 ```
 
-### 2. 生成 bge-small 学生嵌入缓存
+#### 2. 生成 bge-small 学生嵌入缓存
 
 ```bash
 python scripts/generate_embeddings.py \
@@ -169,7 +226,7 @@ python scripts/generate_embeddings.py \
     -o tests/data/embedding.cache
 ```
 
-### 3. 生成 bge-large 教师/精排嵌入缓存
+#### 3. 生成 bge-large 教师/精排嵌入缓存
 
 ```bash
 python scripts/generate_reranker_embeddings_64.py \
@@ -177,7 +234,7 @@ python scripts/generate_reranker_embeddings_64.py \
     -o tests/data/reranker_embedding.cache
 ```
 
-### 4. 训练 PCA-52 基线
+#### 4. 训练 PCA-52 基线
 
 ```bash
 python scripts/train_pca_64.py \
@@ -185,7 +242,7 @@ python scripts/train_pca_64.py \
     --output tests/data/pca_52.bin
 ```
 
-### 5. 训练 Deep Hash v3 模型
+#### 5. 训练 Deep Hash v3 模型
 
 ```bash
 python scripts/train_deep_hash_v3_64.py \
@@ -196,7 +253,7 @@ python scripts/train_deep_hash_v3_64.py \
     -o tests/data/deep_hash_v3_64_3109_h256_s2025.bin
 ```
 
-### 6. 召回导向后处理优化
+#### 6. 召回导向后处理优化
 
 ```bash
 python scripts/post_optimize_codes_recall_64.py \
@@ -206,34 +263,33 @@ python scripts/post_optimize_codes_recall_64.py \
     --pos-k 10 \
     --neg-weight 1.0 \
     --max-iters 10 \
-    -o tests/data/sim_override_3109_h256_s2025.bin
+    -o tests/data/sim_override_3109_h256_s2025_recall_mi100.bin
 ```
 
-### 7. 纯 HSH-64 暴力扫描评测
+#### 7. 纯 HSH-64 暴力扫描评测
 
 ```bash
 cargo run --release --example benchmark_pure_hsh64 -- \
     --embedding tests/data/embedding.cache \
     --pca tests/data/pca_52.bin \
     --deep-hash tests/data/deep_hash_v3_64_3109_h256_s2025.bin \
-    --sim-override tests/data/sim_override_3109_h256_s2025.bin \
+    --sim-override tests/data/sim_override_3109_h256_s2025_recall_mi100.bin \
     --top-k 10 --queries 3109
 ```
 
-### 8. MIH 自适应搜索 + 精排评测
+#### 8. MIH 自适应搜索 + 精排评测
 
 ```bash
 cargo run --release --example benchmark_pure_hsh64 -- \
     --embedding tests/data/embedding.cache \
     --reranker tests/data/reranker_embedding.cache \
     --deep-hash tests/data/deep_hash_v3_64_3109_h256_s2025.bin \
-    --sim-override tests/data/sim_override_3109_h256_s2025.bin \
-    --top-k 10 --queries 3109 \
-    --adaptive --coarse-factor 10 \
+    --sim-override tests/data/sim_override_3109_h256_s2025_recall_mi100.bin \
+    --top-k 10 --queries 3109 --adaptive --coarse-factor 10 \
     --segment-counts 13 --radii 0,2,4,6,8,10,12,14,16,18,20,22
 ```
 
-### 9. Ensemble 多模型评测
+#### 9. Ensemble 多模型评测
 
 ```bash
 cargo run --release --example benchmark_ensemble_hsh64 -- \
@@ -241,9 +297,9 @@ cargo run --release --example benchmark_ensemble_hsh64 -- \
     --reranker tests/data/reranker_embedding.cache \
     --top-k 10 --queries 3109 --radius 22 \
     --model tests/data/deep_hash_v3_64_3109_h256_s2025.bin \
-    --override tests/data/sim_override_3109_h256_s2025.bin \
-    --model tests/data/deep_hash_v3_64_3109_h512_s2025.bin \
-    --override tests/data/sim_override_3109_h512_s2025.bin
+    --override tests/data/sim_override_3109_h256_s2025_recall_mi100.bin \
+    --model tests/data/deep_hash_v3_64_3109_h512_s42.bin \
+    --override tests/data/sim_override_3109_h512_s42_recall.bin
 ```
 
 ---
@@ -268,10 +324,10 @@ use hsh64::{Encoder, EncoderConfig};
 
 let config = EncoderConfig {
     embed_dim: 512,
-    embedding_cache_path: Some("tests/data/embedding.cache".into()),
+    embedding_cache_path: Some("tests/data/embedding_3109.cache".into()),
     pca_path: Some("tests/data/pca_52.bin".into()),
     deep_hash_path: Some("tests/data/deep_hash_v3_64_3109_h256_s2025.bin".into()),
-    sim_override_path: Some("tests/data/sim_override_3109_h256_s2025.bin".into()),
+    sim_override_path: Some("tests/data/sim_override_3109_h256_s2025_recall_mi100.bin".into()),
     ..Default::default()
 };
 let encoder = Encoder::with_config(config)?;
@@ -335,9 +391,18 @@ let pca = PcaProjection::from_file("pca_52.bin")?;
 
 > 注：以上为论文中的代表性结果，具体数值可能随随机种子、后处理超参略有波动。
 
+### 详细实验结果
+
+更完整的模型容量分析、后处理网格搜索、集成策略与效率基准见 [docs/experiment_data_export.md](docs/experiment_data_export.md)。其中关键发现：
+
+- **最佳单模型**：`deep_hash_v3_64_3109_h512_s42.bin` + `sim_override_3109_h512_s42_recall.bin`，Recall@10 = **0.7404**
+- **轻量化单模型**：`deep_hash_v3_64_3109_h256_s42.bin` + `sim_override_3109_h256_s42_recall.bin`，Recall@10 = **0.7382**
+- **四模型集成**：纯 Hamming 空间 Recall@10 = **0.7724**
+- **两阶段系统**：MIH 粗排 + bge-large 精排，四模型集成 Recall@10 = **0.8970**
+
 ### 关键指标
 
-- **在线编码器大小**：585 KB（h256）
+- **在线编码器大小**：585 KB（h256）/ 1.17 MB（h512）
 - **单次 Hamming 比较**：1 条 x86 `popcnt`
 - **MIH 平均候选池**：数十到数百个
 - **MIH 平均查询半径**：约 20（自适应停止）
@@ -352,40 +417,42 @@ cargo test --release
 
 # 纯 HSH-64 暴力扫描（PCA）
 cargo run --release --example benchmark_pure_hsh64 -- \
-    --embedding tests/data/embedding.cache \
+    --embedding tests/data/embedding_3109.cache \
     --pca tests/data/pca_52.bin \
     --top-k 10 --queries 3109
 
 # 纯 HSH-64 暴力扫描（Deep Hash）
 cargo run --release --example benchmark_pure_hsh64 -- \
-    --embedding tests/data/embedding.cache \
+    --embedding tests/data/embedding_3109.cache \
     --deep-hash tests/data/deep_hash_v3_64_3109_h256_s2025.bin \
     --top-k 10 --queries 3109
 
 # MIH 自适应搜索
 cargo run --release --example benchmark_pure_hsh64 -- \
-    --embedding tests/data/embedding.cache \
+    --embedding tests/data/embedding_3109.cache \
     --deep-hash tests/data/deep_hash_v3_64_3109_h256_s2025.bin \
     --top-k 10 --queries 3109 --adaptive
 
 # Ensemble 评测
 cargo run --release --example benchmark_ensemble_hsh64 -- \
-    --embedding tests/data/embedding.cache \
-    --reranker tests/data/reranker_embedding.cache \
+    --embedding tests/data/embedding_3109.cache \
+    --reranker tests/data/reranker_3109_large.cache \
     --top-k 10 --queries 3109 --radius 22 \
     --model tests/data/deep_hash_v3_64_3109_h256_s2025.bin \
-    --override tests/data/sim_override_3109_h256_s2025.bin
+    --override tests/data/sim_override_3109_h256_s2025_recall_mi100.bin
 ```
 
 ---
 
-## 论文与数学证明
+## 论文与设计文档
 
-相关学术论文与完整数学证明见 `paper/` 目录：
-
-- `paper/main.tex`：英文论文 LaTeX 源码
-- `paper/main_chinese.tex`：中文论文 LaTeX 源码
-- `paper/math_proofs.pdf`：核心命题与推导的独立 PDF
+- [docs/explained.md](docs/explained.md)：通俗版 HSH-64 设计文档，涵盖编码结构、三阶段训练、MIH 与非对称距离。
+- [docs/experiment_data_export.md](docs/experiment_data_export.md)：完整实验数据汇总，包含所有模型文件清单与网格搜索结果。
+- [paper/main.tex](paper/main.tex)：英文论文 LaTeX 源码
+- [paper/main.pdf](paper/main.pdf)：英文论文 PDF
+- [paper/main_chinese.tex](paper/main_chinese.tex)：中文论文 LaTeX 源码
+- [paper/main_chinese.pdf](paper/main_chinese.pdf)：中文论文 PDF
+- [paper/references.bib](paper/references.bib)：参考文献
 
 ---
 

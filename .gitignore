@@ -5,6 +5,41 @@
 .DS_Store
 __pycache__/
 *.pyc
+
+# 预训练数据与缓存（通过 GitHub Release 分发，不进入 Git 仓库）
 /tests/data/*.cache
 /tests/data/*.bin
+/tests/data/*.log
+/tests/data/*.json
+/tests/data/mock_run/
 models/
+
+# LaTeX 编译产物
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.run.xml
+*.synctex.gz
+
+# 临时/调试脚本与实验副本
+scripts/_tmp_*
+scripts/_*.log
+scripts/_*.txt
+scripts/_quick_ensemble_top.py
+
+# tests/data 中不应入库的实验脚本与冗余词表
+tests/data/*.py
+tests/data/vocab_from_embedding_3109.txt
+
+# 大型办公文档（通过 Release 或网盘分发）
+*.pptx
+
+# 本地 Release 资源包（通过 GitHub Release 上传，不入库）
+/release_assets/
+
+
