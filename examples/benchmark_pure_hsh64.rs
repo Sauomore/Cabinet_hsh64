@@ -25,6 +25,8 @@ struct Args {
     deep_hash: Option<PathBuf>,
     sim_override: Option<PathBuf>,
     reranker: Option<PathBuf>,
+    /// 词性标签 TSV（word<TAB>lang<TAB>tag<TAB>feat）。None 时退回内置 "n"
+    pos_tags: Option<PathBuf>,
     top_k: usize,
     queries: usize,
     segment_counts: Vec<usize>,
@@ -41,6 +43,7 @@ fn parse_args() -> Args {
     let mut deep_hash = None;
     let mut sim_override = None;
     let mut reranker = None;
+    let mut pos_tags = None;
     let mut top_k = 10usize;
     let mut queries = 100usize;
     let mut segment_counts = vec![1usize, 2, 4, 13];
@@ -58,6 +61,9 @@ fn parse_args() -> Args {
             }
             "--sim-override" => {
                 sim_override = Some(PathBuf::from(args.next().expect("--sim-override 需要值")))
+            }
+            "--pos-tags" => {
+                pos_tags = Some(PathBuf::from(args.next().expect("--pos-tags 需要值")))
             }
             "--reranker" => reranker = Some(PathBuf::from(args.next().expect("--reranker 需要值"))),
             "--top-k" => {
@@ -101,6 +107,7 @@ fn parse_args() -> Args {
         deep_hash,
         sim_override,
         reranker,
+        pos_tags,
         top_k,
         queries,
         segment_counts,
@@ -195,7 +202,7 @@ fn main() {
 
     // 3. 构建 Encoder
     let t0 = Instant::now();
-    let config = EncoderConfig {
+    let mut config = EncoderConfig {
         embed_dim: dim,
         embedding_cache_path: Some(args.embedding.clone()),
         pca_path: Some(args.pca.clone()),
@@ -203,6 +210,15 @@ fn main() {
         sim_override_path: args.sim_override.clone(),
         ..Default::default()
     };
+    // 载入词性标签（双语必需；不提供时退回内置 "n"）
+    if let Some(ref pf) = args.pos_tags {
+        let n = config
+            .load_pos_tags(pf)
+            .unwrap_or_else(|e| panic!("载入词性文件失败: {}", e));
+        println!("[载入词性] {} 条 <- {}", n, pf.display());
+    } else {
+        println!("[载入词性] 未提供 --pos-tags，全部按 \"n\" 处理（旧行为）");
+    }
     let encoder = hsh64::Encoder::with_config(config).expect("创建 Encoder 失败");
     println!(
         "[构建 Encoder] 投影={}, 耗时 {:.2?}",
@@ -238,7 +254,7 @@ fn main() {
     let t0 = Instant::now();
     let mut unique_sims = HashSet::new();
     for word in &vocab {
-        let code = encoder.encode_word_with_pos(word, "n");
+        let code = encoder.encode_word_auto(word);
         unique_sims.insert(code.sim());
     }
     println!(
@@ -256,14 +272,14 @@ fn main() {
         let mut total_recall = 0.0f32;
         for &idx in &query_indices {
             let query_word = &vocab[idx];
-            let query_code = encoder.encode_word_with_pos(query_word, "n");
+            let query_code = encoder.encode_word_auto(query_word);
             let query_proj = encoder.project_word(query_word, query_code.feat());
             let mut scored: Vec<(String, f32)> = vocab
                 .iter()
                 .enumerate()
                 .filter(|(i, _)| *i != idx)
                 .map(|(_, w)| {
-                    let code = encoder.encode_word_with_pos(w, "n");
+                    let code = encoder.encode_word_auto(w);
                     let score = hsh64::mih_index::MihSemanticIndex::asymmetric_score(
                         &query_proj,
                         code.sim(),
@@ -294,13 +310,13 @@ fn main() {
         let mut total_recall = 0.0f32;
         for &idx in &query_indices {
             let query_word = &vocab[idx];
-            let query_code = encoder.encode_word_with_pos(query_word, "n");
+            let query_code = encoder.encode_word_auto(query_word);
             let mut scored: Vec<(String, u32)> = vocab
                 .iter()
                 .enumerate()
                 .filter(|(i, _)| *i != idx)
                 .map(|(_, w)| {
-                    let code = encoder.encode_word_with_pos(w, "n");
+                    let code = encoder.encode_word_auto(w);
                     (w.clone(), code.sim_hamming_distance(&query_code))
                 })
                 .collect();

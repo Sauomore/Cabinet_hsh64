@@ -1,0 +1,25 @@
+{
+  "zh_source": "F:\\HSH_64_dev\\tests\\data\\vocab_3109.txt",
+  "zh_count": 3109,
+  "en_source": "F:\\HSH_64_dev\\data\\ecdict.csv",
+  "en_count": 3000,
+  "en_params": {
+    "n_en": 3000,
+    "max_rank": 6000,
+    "min_len": 2,
+    "max_len": 14
+  },
+  "en_rank_range": [
+    1,
+    2744
+  ],
+  "total": 6109,
+  "stats": {
+    "total_rows": 770611,
+    "has_rank": 6649,
+    "bad_form": 3,
+    "too_long": 24,
+    "duplicate": 0,
+    "abbrev": 0
+  }
+}

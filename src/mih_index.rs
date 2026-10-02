@@ -102,9 +102,10 @@ impl MihSemanticIndex {
             (0..segment_count).map(|_| HashMap::new()).collect();
 
         for word in vocab {
-            let code = match encoder.encode_word_with_pos(&word, "n") {
-                c => c,
-            };
+            // 词性从 encoder 的 pos_tags 表解析（双语词表时中文用 jieba 标签、
+            // 英文用 PTB 标签）。历史上这里硬编码 "n"，导致 feat 恒为 0x0、
+            // 第二种语言的词全部落入 FALLBACK。
+            let code = encoder.encode_word_auto(&word);
             let sim = code.sim();
             for seg in 0..segment_count {
                 let value = segment_value(sim, seg, segment_bits);
@@ -158,7 +159,7 @@ impl MihSemanticIndex {
             }
         }
 
-        let query_code = self.encoder.encode_word_with_pos(query, "n");
+        let query_code = self.encoder.encode_word_auto(query);
         let query_sim = query_code.sim();
         let _query_vec = self.get_query_vec(query);
 
@@ -166,7 +167,7 @@ impl MihSemanticIndex {
         let mut scored: Vec<(String, u32)> = candidates
             .into_iter()
             .map(|word| {
-                let code = self.encoder.encode_word_with_pos(&word, "n");
+                let code = self.encoder.encode_word_auto(&word);
                 let dist = code.sim_hamming_distance(&query_code);
                 (word, dist)
             })
@@ -251,7 +252,7 @@ impl MihSemanticIndex {
             }
         }
 
-        let query_code = self.encoder.encode_word_with_pos(query, "n");
+        let query_code = self.encoder.encode_word_auto(query);
         let query_sim = query_code.sim();
         let target = (coarse_factor * top_k).max(top_k);
         let mut prev_count: usize = 0;
@@ -298,7 +299,7 @@ impl MihSemanticIndex {
             }
         }
 
-        let query_code = self.encoder.encode_word_with_pos(query, "n");
+        let query_code = self.encoder.encode_word_auto(query);
         let query_sim = query_code.sim();
         let query_proj = self.encoder.project_word(query, query_code.feat());
 
@@ -312,7 +313,7 @@ impl MihSemanticIndex {
         let mut scored: Vec<(String, u32, f32)> = candidates
             .into_iter()
             .map(|word| {
-                let code = self.encoder.encode_word_with_pos(&word, "n");
+                let code = self.encoder.encode_word_auto(&word);
                 let hamming = code.sim_hamming_distance(&query_code);
                 let asym_score = Self::asymmetric_score(&query_proj, code.sim());
                 (word, hamming, asym_score)
@@ -380,7 +381,7 @@ impl MihSemanticIndex {
             }
         }
 
-        let query_code = self.encoder.encode_word_with_pos(query, "n");
+        let query_code = self.encoder.encode_word_auto(query);
         let query_sim = query_code.sim();
         let target = (coarse_factor * top_k).max(top_k);
         let mut prev_count: usize = 0;
@@ -452,7 +453,7 @@ impl MihSemanticIndex {
         result
             .into_iter()
             .filter(|word| {
-                let code = self.encoder.encode_word_with_pos(word, "n");
+                let code = self.encoder.encode_word_auto(word);
                 hamming_distance64(code.sim(), query_sim) <= radius
             })
             .collect()

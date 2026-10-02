@@ -7,7 +7,7 @@ use crate::{
     hsh64::HSHCode64,
     pca::PcaProjection,
     perfect_hash::compute_abs,
-    pos_map::{pos_to_feat, FeatureCode},
+    pos_map::{pos_to_feat_lang, FeatureCode, PosLang},
 };
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -21,6 +21,65 @@ pub struct EncoderConfig {
     pub pca_path: Option<PathBuf>,
     pub deep_hash_path: Option<PathBuf>,
     pub sim_override_path: Option<PathBuf>,
+    /// 词 → 词性标签 的映射（可选）
+    ///
+    /// 为空时 `resolve_pos` 退回内置默认值 `"n"`，保持加入双语之前的旧行为。
+    /// 用 [`EncoderConfig::load_pos_tags`] 从 TSV 载入。
+    ///
+    /// 为什么需要它：中文（jieba）与英文（Penn Treebank）的标签集不同，
+    /// 编码时必须按词的语种分派，否则英文词会被当成中文标签而落入 FALLBACK。
+    pub pos_tags: std::collections::HashMap<String, String>,
+}
+
+impl EncoderConfig {
+    /// 从 TSV 载入词性标签。
+    ///
+    /// 文件格式（由 `scripts/49_tag_vocab.py` 生成）：
+    /// ```text
+    /// word<TAB>lang<TAB>tag<TAB>feat
+    /// 苹果<TAB>zh<TAB>n<TAB>0x0
+    /// apple<TAB>en<TAB>NN<TAB>0x0
+    /// ```
+    /// 只读前两列使用（word 与 tag），后面两列供人工检查。
+    /// 首行若是表头（以 `word` 开头）会被跳过。空行忽略。
+    ///
+    /// 返回载入的条目数。
+    pub fn load_pos_tags(&mut self, path: &std::path::Path) -> Result<usize, EncodeError> {
+        let text = std::fs::read_to_string(path)
+            .map_err(|e| EncodeError::Config(format!("读取词性文件失败 {:?}: {}", path, e)))?;
+        let mut n = 0usize;
+        for (lineno, line) in text.lines().enumerate() {
+            let line = line.trim_end_matches(['\r', '\n']);
+            if line.is_empty() {
+                continue;
+            }
+            let mut it = line.split('\t');
+            let word = match it.next() {
+                Some(w) => w,
+                None => continue,
+            };
+            // 跳过表头
+            if lineno == 0 && word == "word" {
+                continue;
+            }
+            let tag = match it.next() {
+                Some(t) => t,
+                None => {
+                    return Err(EncodeError::Config(format!(
+                        "词性文件 {:?} 第 {} 行格式错误（至少需要 word<TAB>tag 两列）",
+                        path,
+                        lineno + 1
+                    )))
+                }
+            };
+            if word.is_empty() {
+                continue;
+            }
+            self.pos_tags.insert(word.to_string(), tag.to_string());
+            n += 1;
+        }
+        Ok(n)
+    }
 }
 
 impl Default for EncoderConfig {
@@ -32,6 +91,7 @@ impl Default for EncoderConfig {
             pca_path: None,
             deep_hash_path: None,
             sim_override_path: None,
+            pos_tags: std::collections::HashMap::new(),
         }
     }
 }
@@ -69,6 +129,8 @@ pub struct Encoder {
     embedding: Arc<dyn EmbeddingModel>,
     projection: Projection,
     common_words: std::collections::HashSet<String>,
+    /// 词 → 词性标签（来自 `EncoderConfig::pos_tags`，可为空）
+    pos_tags: std::collections::HashMap<String, String>,
     /// 每个 (feat, sim_low8) 对应的完美哈希种子
     seed_table: std::collections::HashMap<(u8, u8), u8>,
     /// 后处理优化后的 sim 码覆盖表：word -> sim
@@ -139,6 +201,7 @@ impl Encoder {
         };
 
         Ok(Self {
+            pos_tags: config.pos_tags.clone(),
             config,
             embedding,
             projection,
@@ -146,6 +209,28 @@ impl Encoder {
             seed_table: std::collections::HashMap::new(),
             sim_override,
         })
+    }
+
+    /// 解析一个词的词性与语种。
+    ///
+    /// 优先查 `pos_tags` 表；查不到时退回 `"n"`（保持旧行为，因为历史上
+    /// 所有调用点都硬编码 `"n"`）。语种由词本身内容判定。
+    fn resolve_pos(&self, word: &str) -> (&str, PosLang) {
+        let lang = PosLang::detect(word);
+        match self.pos_tags.get(word) {
+            Some(t) => (t.as_str(), lang),
+            None => ("n", PosLang::Zh),
+        }
+    }
+
+    /// 编码单个词（自动解析词性）
+    ///
+    /// 这是双语流程的推荐入口：词性从 `EncoderConfig::pos_tags` 查，
+    /// 查不到则退回 `"n"`。旧的 `encode_word_with_pos(word, "n")` 调用
+    /// 全部可以换成这个，行为在无词性表时完全一致。
+    pub fn encode_word_auto(&self, word: &str) -> HSHCode64 {
+        let (pos, lang) = self.resolve_pos(word);
+        self.encode_word_with_pos_lang(word, pos, lang)
     }
 
     /// 编码单个词
@@ -161,13 +246,27 @@ impl Encoder {
     }
 
     /// 编码单个词（带词性）
+    ///
+    /// 语言按词的内容自动判断（含 CJK 即中文）。若已知语言，用
+    /// [`encode_word_with_pos_lang`] 更明确，且能省掉一次字符扫描。
     pub fn encode_word_with_pos(&self, word: &str, pos: &str) -> HSHCode64 {
+        self.encode_word_with_pos_lang(word, pos, PosLang::detect(word))
+    }
+
+    /// 编码单个词（带词性与显式语言）
+    ///
+    /// 中文用 jieba 标签集，英文用 Penn Treebank 标签集，
+    /// 两者映射到同一组 16 个 feat 槽位 —— 见 `pos_map` 模块。
+    pub fn encode_word_with_pos_lang(
+        &self,
+        word: &str,
+        pos: &str,
+        lang: PosLang,
+    ) -> HSHCode64 {
         let feat = if self.is_common_word(word) {
             FeatureCode::COMMON.as_u8()
         } else {
-            pos_to_feat(pos)
-                .map(|f| f.as_u8())
-                .unwrap_or(FeatureCode::FALLBACK.as_u8())
+            pos_to_feat_lang(pos, lang).as_u8()
         };
         self.encode_word(word, feat)
     }

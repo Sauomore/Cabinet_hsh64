@@ -5,15 +5,18 @@
 
 > **当前版本**：[`v1`](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v1)
 
-HSH-64 是面向轻量化中文词表级语义检索的 64 位可学习语义哈希方案。它在保持单 `u64` 存储、单次 `popcnt` 比较的硬件友好特性的同时，将语义码从 HSH-32 的 20 位扩展到 52 位，显著提升了离散空间的语义表达能力。
+HSH-64 是面向轻量化**中英双语**词表级语义检索的 64 位可学习语义哈希方案。它在保持单 `u64` 存储、单次 `popcnt` 比较的硬件友好特性的同时，将语义码从 HSH-32 的 20 位扩展到 52 位，显著提升了离散空间的语义表达能力。
 
 > **论文摘要**：语义哈希将高维连续嵌入映射为紧凑二进制码，以极小内存占用实现次线性近似最近邻（ANN）检索。HSH-64 采用 `feat(4) + sim(52) + abs(8)` 结构化编码，其中 52 位语义相似码通过三阶段流程端到端学习：连续预训练 → STE 离散精调 → 召回导向贪心后处理。在线检索集成自适应 MIH 粗排、非对称距离评分与可选的 bge-large 精排。在 3,109 词中文词表上，最佳单模型（h512，1.17 MB）纯 Hamming 空间 Recall@10 达 **0.7404**，轻量化模型（h256，585 KB）达 **0.7382**，四模型集成达 **0.7724**，完整两阶段系统达 **0.8970**。
+
+> **双语扩展（进行中）**：`feat` 的 16 个槽位现在是中英共用的（中文 jieba 标签 / 英文 Penn Treebank 标签映射到同一组码），已构建 6,109 词混合词表（中英 ≈ 1:1）。详见 **[中英双语扩展](docs/bilingual.md)**。
 
 ---
 
 ## 项目定位与核心特性
 
 - **结构化 64 位编码**：`feat(4) + sim(52) + abs(8)`，单个 `u64` 存储，硬件 popcount 比较。
+- **中英双语**：`feat` 的 16 个槽位由两种语言的词性标签共用，可建混合索引并支持跨语言检索。
 - **三阶段端到端训练**：连续预训练 → STE 离散精调 → 召回导向贪心后处理。
 - **两阶段检索架构**：轻量编码器（bge-small + 小 MLP）粗排，可选 bge-large 精排。
 - **自适应多索引哈希（MIH）**：支持动态半径扩展，兼顾召回率与候选池大小。
@@ -127,7 +130,7 @@ hsh64/
 │   ├── mih_index.rs        # MihSemanticIndex 自适应搜索
 │   ├── embedding.rs        # Embedding trait / FileCachedEmbedding
 │   ├── perfect_hash.rs     # 簇内完美哈希
-│   ├── pos_map.rs          # 词性映射
+│   ├── pos_map.rs          # 词性映射（中英双语，16 槽位共用）
 │   └── error.rs            # 错误类型
 ├── examples/               # Rust 可运行示例
 │   ├── benchmark_pure_hsh64.rs
@@ -141,11 +144,19 @@ hsh64/
 │   ├── post_optimize_codes_recall_64.py
 │   ├── benchmark_pure_hsh64.py
 │   ├── ensemble_eval.py
+│   ├── bilingual_pos.py    # 双语词性标注（与 pos_map.rs 对应）
+│   ├── 46_export_feat_table.py  # 导出映射表供 Rust 对拍
+│   ├── 47_detect_lang.py        # 词表语言构成检测
+│   ├── 48_build_vocab.py        # 中英混合词表构建
+│   ├── 49_tag_vocab.py          # 混合词表标注
 │   └── ...
 ├── tests/                  # Rust 集成测试与数据
 │   ├── end_to_end.rs
+│   ├── feat_parity.rs      # Python↔Rust 映射表对拍
 │   └── data/
+├── data/                   # 双语工作数据（生成物，大多不入库）
 ├── docs/                   # 设计文档与实验报告
+│   ├── bilingual.md        # 中英双语扩展
 │   ├── explained.md        # HSH-64 通俗设计文档
 │   ├── explained.pdf       # 设计文档 PDF
 │   ├── experiment_data_export.md  # 实验数据汇总
@@ -451,6 +462,7 @@ cargo run --release --example benchmark_ensemble_hsh64 -- \
 
 ## 论文与设计文档
 
+- [docs/bilingual.md](docs/bilingual.md)：**中英双语扩展** —— 16 槽位分配方案、词表构建、跨语言对齐验证、已知局限与待办。
 - [docs/explained.md](docs/explained.md)：通俗版 HSH-64 设计文档，涵盖编码结构、三阶段训练、MIH 与非对称距离。
 - [docs/experiment_data_export.md](docs/experiment_data_export.md)：完整实验数据汇总，包含所有模型文件清单与网格搜索结果。
 - [paper/main.tex](paper/main.tex)：英文论文 LaTeX 源码
