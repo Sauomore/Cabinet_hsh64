@@ -14,6 +14,18 @@ __pycache__/
 /tests/data/mock_run/
 models/
 
+# ⚠️ 例外：feat 映射表的对拍基准必须入库
+# 它由 scripts/46_export_feat_table.py 生成、tests/feat_parity.rs 读取。
+# 不入库的话，别人 clone 后跑 cargo test 会因缺文件而失败。
+!tests/data/feat_table.json
+
+# 双语流程的工作数据
+# ecdict.csv 62.9 MB 是第三方词典库，不随仓库分发，用脚本下载
+/data/ecdict.csv
+/data/*.cache
+/data/*.bin
+/data/backup_zh/
+
 # LaTeX 编译产物
 *.aux
 *.bbl
@@ -43,3 +55,11 @@ tests/data/vocab_from_embedding_3109.txt
 /release_assets/
 
 
+
+# 临时提交信息文件
+# 用通配符而不是精确文件名 —— 之前只写了 _cmsg.txt，
+# 结果 _tmp_cmsg 就被误提交了
+_*cmsg*
+_tmp_cmsg
+_*.txt
+_*.log

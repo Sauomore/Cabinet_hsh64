@@ -1,0 +1,24 @@
+{
+  "vocab": "data\\mixed_vocab.txt",
+  "total": 6109,
+  "counts": {
+    "mixed": 12,
+    "en": 3002,
+    "zh": 3095
+  },
+  "mixed_words": [
+    "T恤",
+    "U盘",
+    "大U盘",
+    "好U盘",
+    "小U盘",
+    "快U盘",
+    "新U盘",
+    "旧U盘",
+    "红U盘",
+    "绿U盘",
+    "美U盘",
+    "蓝U盘"
+  ],
+  "other_words": []
+}

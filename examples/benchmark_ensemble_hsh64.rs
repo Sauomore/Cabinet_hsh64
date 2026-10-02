@@ -256,12 +256,12 @@ fn main() {
         let mut union_candidates: Vec<(String, u32)> = Vec::new();
 
         for index in &indices {
-            let query_code = index.encoder().encode_word_with_pos(query_word, "n");
+            let query_code = index.encoder().encode_word_auto(query_word);
             let query_sim = query_code.sim();
             let candidates = index.collect_candidates(query_sim, args.radius);
             for word in candidates {
                 if seen.insert(word.clone()) {
-                    let code = index.encoder().encode_word_with_pos(&word, "n");
+                    let code = index.encoder().encode_word_auto(&word);
                     let dist = hamming_distance64(code.sim(), query_sim);
                     union_candidates.push((word, dist));
                 }
