@@ -452,4 +452,4 @@ let (radius, results) =
 
 ## License
 
-MIT OR Apache-2.0
+MIT —— 见 [LICENSE](LICENSE)。
