@@ -39,7 +39,7 @@ from cabinet_bnn.hsh.deep_hash import bits_to_u64, project, quantize_bits  # noq
 from cabinet_bnn.hsh.post_optimize import load_override_cache  # noqa: E402
 
 sys.path.insert(0, str(ROOT / "scripts"))
-from _eval_helpers import load_exported, load_pca_student  # noqa: E402
+from eval_helpers import load_exported, load_pca_student  # noqa: E402
 
 
 def hamming_pairs(a: np.ndarray, b: np.ndarray) -> np.ndarray:

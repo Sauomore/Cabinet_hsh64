@@ -43,7 +43,7 @@ try:
 except Exception:
     pass
 
-from _eval_helpers import load_exported, load_pca_student  # noqa: E402
+from eval_helpers import load_exported, load_pca_student  # noqa: E402
 from cabinet_bnn.data.embedding_cache import normalize_rows, read_cache  # noqa: E402
 from cabinet_bnn.hsh.deep_hash import bits_to_u64, project, quantize_bits  # noqa: E402
 from cabinet_bnn.hsh.post_optimize import load_override_cache  # noqa: E402
