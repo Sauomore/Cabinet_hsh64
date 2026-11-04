@@ -2,12 +2,17 @@
 
 [![DOI](https://zenodo.org/badge/1307857867.svg)](https://doi.org/10.5281/zenodo.21721838)
 [![GitHub release](https://img.shields.io/github/v/release/Sauomore/Cabinet_hsh64?include_prereleases&style=flat-square)](https://github.com/Sauomore/Cabinet_hsh64/releases)
+[![Version](https://img.shields.io/badge/version-2.0-blue?style=flat-square)](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.0)
 
 [中文](README.md) ｜ **English**
 
 > A 64-bit learnable semantic hashing scheme for lightweight **Chinese–English**
 > vocabulary-level retrieval.
 > One `u64` per item, one `popcnt` per comparison, runs on CPU only.
+
+**Current version v2.0** — adds natural-vocabulary models (3k / 6k / 10k / 16k)
+with a scale evaluation, and fixes two MIH defects. See the
+[release page](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.0).
 
 ---
 
@@ -67,6 +72,33 @@ Hash is *worse* than PCA-52** (0.42–0.43 vs 0.53), despite being a more
 expressive non-linear transform. **Stage-three post-processing (recall-oriented
 greedy bit flipping) is not an optional refinement — it is what makes this
 scheme work at all.** See [docs/explained.md §8.3](docs/explained.md).
+
+### ⚠️ Scope caveat for the table above (added 2026-11)
+
+A later evaluation found that **65% of the 3,109-word vocabulary is synthetic**:
+ten modifiers multiply roughly 200 base words (209 entries start with 大, 204 with
+红, and so on), leaving about 1,114 genuinely natural base words. Those
+neighbourhoods are **2.18x sharper** than natural text (normalised top-10
+boundary gap), so the numbers above describe an easier-than-real task.
+
+Re-run on **natural Chinese vocabularies** (wordfreq frequency lists), same
+pipeline:
+
+| Vocabulary | Size | Bare code | + post-processing |
+|---|---|---|---|
+| Synthetic (above) | 3,109 | 0.499 | **0.7426** |
+| Natural | 3,000 | 0.246 | **0.6082** |
+| Natural | 6,000 | 0.245 | 0.5990 |
+| Natural | 10,000 | 0.247 | 0.5936 |
+| Natural | 16,000 | 0.252 | 0.5965 |
+
+**The good news is that scale does not hurt recall**: a 5.3x larger vocabulary
+costs 0.012, and at 16,000 words **62.3% of every query's true neighbours did not
+exist in the small vocabulary** (100% of queries have at least one new
+neighbour). Against a zero-learning PCA-52 baseline, HSH-64's advantage is
+1.62x at 3k and **1.91x at 16k**, growing with scale.
+
+Full data, mechanism analysis and index fixes: **[docs/scale_evaluation.md](docs/scale_evaluation.md)**.
 
 ---
 
@@ -175,6 +207,19 @@ cargo run --release --example benchmark_pure_hsh64 -- \
 | `hsh64_pretrained_3109_light.zip` | ~18 MB | vocab + both embedding caches + PCA-52 + Deep Hash h256 + post-processing |
 | `hsh64_pretrained_3109_best.zip` | ~18 MB | as above, Deep Hash h512 s42 (best single model) |
 | `hsh64_pretrained_3109_full.zip` | ~22 MB | multiple models and post-processing sets (reproduce the ensemble) |
+
+**v2.0 (natural vocabularies, for the scale evaluation)**
+
+| Bundle | Size | Vocabulary | Recall@10 after post-processing |
+|---|---|---|---|
+| `hsh64_pretrained_natural_3000.zip` | 19 MB | 3,000 natural Chinese words | 0.6082 |
+| `hsh64_pretrained_natural_6000.zip` | 36 MB | 6,000 | 0.5990 |
+| `hsh64_pretrained_natural_10000.zip` | 58 MB | 10,000 | 0.5936 |
+| `hsh64_pretrained_natural_16000.zip` | 91 MB | 16,000 | 0.5965 |
+
+Each contains: vocabulary, student cache (512-dim, the model's input), teacher
+cache (1024-dim, the ground-truth source), the DeepHash model, the post-processing
+override, the PCA basis, `MANIFEST.json` (sha256) and the reproduction command.
 
 > The Git repository does not carry `.bin` / `.cache` files (see
 > [.gitignore](.gitignore)). Get them from the Releases page.
@@ -397,6 +442,7 @@ Full record in **[docs/bilingual.md](docs/bilingual.md), section 9**.
 | Document | Contents |
 |---|---|
 | **[docs/bilingual.md](docs/bilingual.md)** | Chinese–English extension: slot allocation, vocabulary construction, cross-lingual validation, open problems |
+| **[docs/scale_evaluation.md](docs/scale_evaluation.md)** | **scale evaluation**: the synthetic vocabulary, the natural 3k→16k curve, MIH radii and the capacity ceiling |
 | **[docs/explained.md](docs/explained.md)** | accessible design document: codec, three-stage training, MIH, asymmetric distance |
 | [docs/experiment_data_export.md](docs/experiment_data_export.md) | full experiment data summary |
 | [docs/hsh64_principle.html](docs/hsh64_principle.html) | illustrated principles |
@@ -414,6 +460,18 @@ Full record in **[docs/bilingual.md](docs/bilingual.md), section 9**.
   url     = {https://github.com/Sauomore/Cabinet_hsh64}
 }
 ```
+
+---
+
+## Supporting this project
+
+If you like this project, **please consider giving it a star** — it genuinely
+matters to me.
+
+If you hit a bug while using it, or have an improvement in mind, please
+[open an issue](https://github.com/Sauomore/Cabinet_hsh64/issues). Even if it is
+just a sentence in the docs that did not make sense — that usually means the docs
+really do need fixing.
 
 ---
 

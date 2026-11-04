@@ -2,11 +2,15 @@
 
 [![DOI](https://zenodo.org/badge/1307857867.svg)](https://doi.org/10.5281/zenodo.21721838)
 [![GitHub release](https://img.shields.io/github/v/release/Sauomore/Cabinet_hsh64?include_prereleases&style=flat-square)](https://github.com/Sauomore/Cabinet_hsh64/releases)
+[![Version](https://img.shields.io/badge/version-2.0-blue?style=flat-square)](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.0)
 
 **中文** ｜ [English](README.en.md)
 
 > 面向轻量化**中英双语**词表级语义检索的 64 位可学习语义哈希方案。
 > 单个 `u64` 存储，单次 `popcnt` 比较，纯 CPU 运行。
+
+**当前版本 v2.0** —— 新增自然词表模型（3k / 6k / 10k / 16k）与规模评估，
+修复 MIH 两处缺陷。详见[发布页](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.0)。
 
 ---
 
@@ -187,7 +191,7 @@ cargo run --release --example benchmark_pure_hsh64 -- \
 | `hsh64_pretrained_3109_best.zip` | ~18 MB | 同上，Deep Hash h512 s42（最佳单模型） |
 | `hsh64_pretrained_3109_full.zip` | ~22 MB | 多个模型 + 多组后处理（复现 Ensemble） |
 
-**v2（自然词表，规模评估用）**
+**v2.0（自然词表，规模评估用）**
 
 | 资源包 | 大小 | 词表 | 后处理召回@10 |
 |---|---|---|---|
@@ -434,6 +438,15 @@ let (radius, results) =
   url     = {https://github.com/Sauomore/Cabinet_hsh64}
 }
 ```
+
+---
+
+## 支持这个项目
+
+如果你喜欢我的项目，**可以为我点一个 Star** —— 这对我真的很重要。
+
+如果你在使用过程中发现了 bug，或者有改进建议，欢迎[提交 Issue](https://github.com/Sauomore/Cabinet_hsh64/issues)。
+即使只是文档里一句话看不懂，也可以提 —— 那通常意味着文档确实该改。
 
 ---
 
