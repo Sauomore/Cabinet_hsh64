@@ -20,10 +20,10 @@
 
     # 2) 真正上传（会先创建 release，再逐个上传 asset）
     set GITHUB_TOKEN=ghp_xxx
-    python scripts/61_upload_release.py --tag v2.0.0
+    python scripts/61_upload_release.py --tag v2.0
 
     # 3) 已存在 release，只补传 asset
-    python scripts/61_upload_release.py --tag v2.0.0 --skip-create
+    python scripts/61_upload_release.py --tag v2.0 --skip-create
 """
 
 from __future__ import annotations
@@ -169,7 +169,7 @@ def api(method: str, url: str, tok: str, data: dict | None = None,
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="上传 Release 资源")
-    ap.add_argument("--tag", default="v2.0.0")
+    ap.add_argument("--tag", default="v2.0")
     ap.add_argument("--name", default="HSH-64 v2: Natural Vocabulary Models")
     ap.add_argument("--dist", type=Path, default=ROOT / "dist")
     ap.add_argument("--dry-run", action="store_true")
@@ -230,22 +230,26 @@ def main() -> int:
         return 0
 
     # 1) 找或建 release
+    #
+    # 建成 draft：先上传完所有 asset 再发布。
+    # 否则上传中途失败会留下一个「公开但缺文件」的 release，
+    # 别人下载到一半才发现包不全。
     rel = None
     if not args.skip_create:
         st, cur = api("GET", f"{API}/repos/{OWNER}/{REPO}/releases/tags/{args.tag}",
                       tok)
         if st == 200:
             rel = cur
-            print(f"  release 已存在（id={rel['id']}），补传 asset")
+            print(f"  release 已存在（id={rel['id']}, draft={rel.get('draft')}），补传 asset")
         else:
             st, rel = api("POST", f"{API}/repos/{OWNER}/{REPO}/releases", tok,
                           data={"tag_name": args.tag, "name": args.name,
-                                "body": RELEASE_BODY, "draft": False,
+                                "body": RELEASE_BODY, "draft": True,
                                 "prerelease": False})
             if st not in (200, 201):
                 print(f"  ❌ 创建 release 失败 HTTP {st}: {rel}")
                 return 1
-            print(f"  ✅ 已创建 release id={rel['id']}")
+            print(f"  ✅ 已创建 draft release id={rel['id']}")
     else:
         st, rel = api("GET", f"{API}/repos/{OWNER}/{REPO}/releases/tags/{args.tag}",
                       tok)
@@ -277,7 +281,20 @@ def main() -> int:
     print()
     print("=" * 74)
     print(f"完成 {ok}/{len(zips)}")
-    print(f"  https://github.com/{OWNER}/{REPO}/releases/tag/{args.tag}")
+
+    # 3) 全部成功才发布；有失败就保持 draft，方便重跑补传
+    if ok == len(zips):
+        st, pub = api("PATCH", f"{API}/repos/{OWNER}/{REPO}/releases/{rel['id']}",
+                      tok, data={"draft": False})
+        if st == 200 and not pub.get("draft", True):
+            print("  ✅ 已发布（draft -> public）")
+        else:
+            print(f"  ⚠️ 发布失败 HTTP {st}: {str(pub)[:200]}")
+            print("     资产已上传，只是仍是 draft —— 可重跑本脚本或网页点发布")
+        print(f"  https://github.com/{OWNER}/{REPO}/releases/tag/{args.tag}")
+    else:
+        print("  ⚠️ 有资产未上传成功，release 保持 draft（未公开）")
+        print("     修正后重跑本脚本即可补传")
     return 0 if ok == len(zips) else 1
 
 
