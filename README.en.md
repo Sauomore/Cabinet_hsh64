@@ -335,10 +335,12 @@ hsh64/
 │   └── data/
 ├── data/                       bilingual working data (generated, mostly ignored)
 ├── docs/
-│   ├── bilingual.md            Chinese–English extension
-│   ├── explained.md            accessible design document
-│   ├── experiment_data_export.md
-│   └── hsh64_principle.html
+│   ├── README.en.md            documentation index
+│   ├── explained.en.md         design document (from first principles)
+│   ├── scale_evaluation.en.md  every measured result and how to reproduce it
+│   ├── bilingual.en.md         Chinese–English extension
+│   ├── *.md                    Chinese versions of each document
+│   └── hsh64_principle.html    illustrated principles
 └── paper/                      paper sources and PDFs (EN + ZH)
 ```
 
@@ -441,12 +443,15 @@ Full record in **[docs/bilingual.md](docs/bilingual.md), section 9**.
 
 | Document | Contents |
 |---|---|
-| **[docs/bilingual.md](docs/bilingual.md)** | Chinese–English extension: slot allocation, vocabulary construction, cross-lingual validation, open problems |
-| **[docs/scale_evaluation.md](docs/scale_evaluation.md)** | **scale evaluation**: the synthetic vocabulary, the natural 3k→16k curve, MIH radii and the capacity ceiling |
-| **[docs/explained.md](docs/explained.md)** | accessible design document: codec, three-stage training, MIH, asymmetric distance |
-| [docs/experiment_data_export.md](docs/experiment_data_export.md) | full experiment data summary |
+| **[docs/](docs/README.en.md)** | **documentation index** — organised by what you want to do |
+| **[docs/explained.en.md](docs/explained.en.md)** | design document from first principles: vocabulary and embeddings, what Recall@K means, codec, DeepHash, three-stage training, asymmetric distance, MIH, two-stage retrieval |
+| **[docs/scale_evaluation.en.md](docs/scale_evaluation.en.md)** | every measured result: reproduction of the paper's benchmark, the natural-vocabulary 3k→16k scale curve, comparison against a zero-learning baseline, index radii, the `abs` capacity ceiling, reproduction commands |
+| **[docs/bilingual.en.md](docs/bilingual.en.md)** | Chinese–English support: `feat` slot allocation, vocabulary construction, cross-lingual alignment validation, known limitations |
 | [docs/hsh64_principle.html](docs/hsh64_principle.html) | illustrated principles |
 | [paper/](paper/) | paper sources and PDFs (EN + ZH) |
+
+Every document has a Chinese counterpart without the `.en` suffix — see
+[docs/README.md](docs/README.md).
 
 ---
 

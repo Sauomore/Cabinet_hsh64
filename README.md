@@ -315,10 +315,12 @@ hsh64/
 │   └── data/
 ├── data/                       双语工作数据（生成物，多不入库）
 ├── docs/
+│   ├── README.md               文档索引
+│   ├── explained.md            设计文档（从零讲起）
+│   ├── scale_evaluation.md     全部实测结果与复现
 │   ├── bilingual.md            中英双语扩展
-│   ├── explained.md            通俗版设计文档
-│   ├── experiment_data_export.md
-│   └── hsh64_principle.html
+│   ├── *.en.md                 各文档的英文版
+│   └── hsh64_principle.html    原理图解
 └── paper/                      论文源码与 PDF（中英）
 ```
 
@@ -419,12 +421,14 @@ let (radius, results) =
 
 | 文档 | 内容 |
 |---|---|
-| **[docs/bilingual.md](docs/bilingual.md)** | 中英双语扩展：槽位分配、词表构建、跨语言验证、已知问题 |
-| **[docs/scale_evaluation.md](docs/scale_evaluation.md)** | **规模评估**：论文词表的合成性、自然词表 3k→16k 曲线、MIH 半径与容量上限 |
-| **[docs/explained.md](docs/explained.md)** | 通俗版设计文档：编码结构、三阶段训练、MIH、非对称距离 |
-| [docs/experiment_data_export.md](docs/experiment_data_export.md) | 完整实验数据汇总 |
+| **[docs/](docs/README.md)** | **文档索引** —— 按阅读目的组织 |
+| **[docs/explained.md](docs/explained.md)** | 从零讲起的设计文档：词表与嵌入、Recall@K 的定义、编码结构、DeepHash、三阶段训练、非对称距离、MIH、两阶段检索 |
+| **[docs/scale_evaluation.md](docs/scale_evaluation.md)** | 全部实测结果：论文基准复现、自然词表 3k→16k 规模曲线、与零学习基线的对比、索引半径、`abs` 容量上限、复现命令 |
+| **[docs/bilingual.md](docs/bilingual.md)** | 中英双语：`feat` 槽位分配、词表构建、跨语言对齐验证、已知限制 |
 | [docs/hsh64_principle.html](docs/hsh64_principle.html) | 原理图解 |
 | [paper/](paper/) | 论文 LaTeX 源码与 PDF（中英双版本） |
+
+以上每篇都有英文版本（文件名加 `.en`），见 [docs/README.en.md](docs/README.en.md)。
 
 ---
 
