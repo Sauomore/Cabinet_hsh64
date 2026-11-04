@@ -26,6 +26,15 @@ models/
 /data/*.bin
 /data/backup_zh/
 
+# 规模评估的产物（226 MB 的嵌入缓存与模型）
+# 词表本身（natural_vocab_*.txt，几十 KB）要入库 —— 它是评估配置的一部分
+/data/eval/
+!data/natural_vocab_*.txt
+!data/natural_vocab.meta.json
+
+# 打包好的 Release 资源（200 MB 的 zip，走 GitHub Release 分发）
+/dist/
+
 # LaTeX 编译产物
 *.aux
 *.bbl

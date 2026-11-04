@@ -1,0 +1,39 @@
+{
+  "lang": "zh",
+  "filter": {
+    "too_short": 6668,
+    "non_cjk": 8130,
+    "stopword": 84,
+    "dup": 0,
+    "too_long": 3337
+  },
+  "pool": 120000,
+  "kept": 101781,
+  "sizes": {
+    "3000": {
+      "path": "F:\\HSH_64_dev\\data\\natural_vocab_3000.txt",
+      "n": 3000,
+      "mean_len": 2.054333333333333,
+      "single_char": 0
+    },
+    "6000": {
+      "path": "F:\\HSH_64_dev\\data\\natural_vocab_6000.txt",
+      "n": 6000,
+      "mean_len": 2.0938333333333334,
+      "single_char": 0
+    },
+    "10000": {
+      "path": "F:\\HSH_64_dev\\data\\natural_vocab_10000.txt",
+      "n": 10000,
+      "mean_len": 2.1313,
+      "single_char": 0
+    },
+    "16000": {
+      "path": "F:\\HSH_64_dev\\data\\natural_vocab_16000.txt",
+      "n": 16000,
+      "mean_len": 2.1834375,
+      "single_char": 0
+    }
+  },
+  "nested": true
+}

@@ -85,6 +85,20 @@ impl MihSemanticIndex {
                 segment_count
             )));
         }
+        // ⚠️ segment_count = 1 是【退化】情形，明确拒绝而不是静默给错结果。
+        //
+        //    原因：段值宽度 = 52 bit，但索引键是 u32，会被截断成低 32 位；
+        //    且「枚举段内汉明球」在 52 位上有 2^52 个值，不可能枚举。
+        //    历史上允许 seg=1，结果是对所有 radius 都返回 0 候选 ——
+        //    看起来像「索引坏了」，实际是这个配置在数学上就不成立。
+        //    多索引哈希（MIH）本身要求 m >= 2 段。
+        if segment_count == 1 {
+            return Err(EncodeError::Config(
+                "segment_count = 1 不支持：段值会占满 52 位，既超出 u32 键宽、\
+                 也无法枚举段内汉明球。多索引哈希要求至少 2 段（建议 4 或 13）。"
+                    .to_string(),
+            ));
+        }
         if 52 % segment_count != 0 {
             return Err(EncodeError::Config(format!(
                 "segment_count 必须能整除 52-bit sim: {} 不能整除 52",
@@ -430,19 +444,39 @@ impl MihSemanticIndex {
         // 每段最多允许的 Hamming 距离：完整距离 <= radius 的候选，
         // 必然在每一段上的距离也不超过 radius（同时不超过段长）。
         let segment_radius = (radius as usize).min(self.segment_bits);
-        let max_seg_value = 1u32 << self.segment_bits;
 
         for seg in 0..self.segment_count {
             let query_seg = segment_value(query_sim, seg, self.segment_bits);
+            let dict = &self.segment_indices[seg];
 
-            for value in 0..max_seg_value {
-                if hamming_distance64(value as u64, query_seg as u64) > segment_radius as u32 {
-                    continue;
+            // 两种枚举策略，取更省的那一种：
+            //   · 球体积小  -> 枚举汉明球内的取值（C(bits, <=d) 个）
+            //   · 球体积大  -> 直接遍历字典键（段字典通常远小于 2^bits）
+            //
+            // 旧实现无条件遍历 0..2^segment_bits：
+            //   seg=4 (13 bit) 时 8192 次，尚可；
+            //   seg=2 (26 bit) 时 6700 万次 —— QPS 掉到个位数。
+            // 以 6109 词为例，字典每段只有几千个键，遍历字典快好几个数量级。
+            let ball = binomial_sum_le(self.segment_bits, segment_radius);
+            let use_ball = ball <= (dict.len() as u64).saturating_mul(2);
+
+            if use_ball {
+                for value in enumerate_ball(query_seg, self.segment_bits, segment_radius) {
+                    if let Some(words) = dict.get(&value) {
+                        for word in words {
+                            if seen.insert(word.clone()) {
+                                result.push(word.clone());
+                            }
+                        }
+                    }
                 }
-                if let Some(words) = self.segment_indices[seg].get(&value) {
-                    for word in words {
-                        if seen.insert(word.clone()) {
-                            result.push(word.clone());
+            } else {
+                for (&value, words) in dict.iter() {
+                    if popcount_u32(value ^ query_seg) <= segment_radius as u32 {
+                        for word in words {
+                            if seen.insert(word.clone()) {
+                                result.push(word.clone());
+                            }
                         }
                     }
                 }
@@ -469,6 +503,72 @@ fn segment_value(sim: u64, seg: usize, segment_bits: usize) -> u32 {
     let shift = seg * segment_bits;
     let mask = (1u64 << segment_bits) - 1;
     ((sim >> shift) & mask) as u32
+}
+
+/// 32 位 popcount（段值宽度 <= 26，故够了）
+fn popcount_u32(x: u32) -> u32 {
+    x.count_ones()
+}
+
+/// 二项式和 C(bits, 0..=d)：汉明球的体积。
+///
+/// 用来说明「枚举球」和「遍历字典」哪个更省。
+fn binomial_sum_le(bits: usize, d: usize) -> u64 {
+    if d >= bits {
+        return 1u64 << bits.min(52); // 全空间
+    }
+    // 递推算 C(n, k)
+    let mut total: u64 = 1; // k = 0
+    let mut c: u64 = 1;
+    for k in 1..=d {
+        c = c.saturating_mul((bits - k + 1) as u64) / k as u64;
+        total = total.saturating_add(c);
+    }
+    total
+}
+
+/// 枚举与 center 的 Hamming 距离 <= d 的所有取值（码宽 bits）。
+///
+/// 直接生成组合 C(bits, k)，而不是遍历 0..2^bits。
+/// bits 最多 26（因为 segment_count >= 2），所以 1u32 << b 不会溢出。
+///
+/// 返回的向量含 center 本身（距离 0），长度应为 sum_{k=0..=d} C(bits, k)。
+fn enumerate_ball(center: u32, bits: usize, d: usize) -> Vec<u32> {
+    let d = d.min(bits);
+    let mut out = Vec::with_capacity(binomial_sum_le(bits, d) as usize);
+    out.push(center);
+
+    for k in 1..=d {
+        if k > bits {
+            break;
+        }
+        let mut comb: Vec<usize> = (0..k).collect();
+        'emit: loop {
+            // 翻转 comb 指定的 k 位
+            let mut v = center;
+            for &b in &comb {
+                v ^= 1u32 << b;
+            }
+            out.push(v);
+
+            // 组合推进（字典序）
+            let mut i = k;
+            loop {
+                if i == 0 {
+                    break 'emit; // 本 k 的组合已全部枚举
+                }
+                i -= 1;
+                if comb[i] < bits - (k - i) {
+                    comb[i] += 1;
+                    for j in (i + 1)..k {
+                        comb[j] = comb[j - 1] + 1;
+                    }
+                    continue 'emit;
+                }
+            }
+        }
+    }
+    out
 }
 
 /// 余弦相似度
@@ -514,5 +614,61 @@ mod tests {
         let index = build_test_index();
         let results = index.search("词0", 5, 0, 10).unwrap();
         assert!(!results.is_empty());
+    }
+
+    /// 球枚举必须与暴力枚举的结果【完全一致】。
+    ///
+    /// 这是性能优化（2^bits -> C(bits,<=d)）的正确性保障：
+    /// 优化只改枚举方式，不能改候选集合。
+    #[test]
+    fn test_enumerate_ball_matches_bruteforce() {
+        for bits in [4usize, 8, 13] {
+            for d in [0usize, 1, 2, 3] {
+                if d > bits {
+                    continue;
+                }
+                let space = 1u32 << bits;
+                for &center in &[0u32, 1, space - 1, space / 3] {
+                    let ball = enumerate_ball(center, bits, d);
+                    let mut brute: Vec<u32> = (0..space)
+                        .filter(|&v| popcount_u32(v ^ center) <= d as u32)
+                        .collect();
+                    let mut got = ball.clone();
+                    got.sort_unstable();
+                    got.dedup();
+                    brute.sort_unstable();
+                    assert_eq!(
+                        got, brute,
+                        "bits={} d={} center={}：球枚举与暴力不一致",
+                        bits, d, center
+                    );
+                    // 长度应等于二项式和
+                    assert_eq!(
+                        ball.len() as u64,
+                        binomial_sum_le(bits, d),
+                        "bits={} d={}：球体积与二项式和不符",
+                        bits, d
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_binomial_sum_le() {
+        assert_eq!(binomial_sum_le(13, 0), 1);
+        assert_eq!(binomial_sum_le(13, 1), 1 + 13);
+        assert_eq!(binomial_sum_le(13, 2), 1 + 13 + 78);
+        assert_eq!(binomial_sum_le(4, 4), 1 << 4);
+    }
+
+    /// segment_count = 1 必须被明确拒绝，而不是静默返回 0 候选。
+    #[test]
+    fn test_reject_single_segment() {
+        let encoder = Encoder::new();
+        let words: Vec<String> = (0..10).map(|i| format!("w{}", i)).collect();
+        let embedding = Arc::new(MockEmbedding::with_vocab(encoder.embed_dim(), words));
+        let r = MihSemanticIndex::build_with_embedding(encoder, embedding, 1, false);
+        assert!(r.is_err(), "segment_count=1 应当报错");
     }
 }

@@ -46,8 +46,13 @@ fn parse_args() -> Args {
     let mut pos_tags = None;
     let mut top_k = 10usize;
     let mut queries = 100usize;
-    let mut segment_counts = vec![1usize, 2, 4, 13];
-    let mut radii = vec![0u32, 2, 4, 6, 8];
+    // 默认不含 1：segment_count=1 已被 MihSemanticIndex 明确拒绝
+    // （段值会占满 52 位，超出 u32 键宽且无法枚举段内汉明球）
+    let mut segment_counts = vec![2usize, 4, 13];
+    // 默认覆盖到 22：52 位码的正样本对 Hamming 距离约 9-10 位，
+    // 只扫到 8 会一个正样本都抓不到（候选数 ~3、召回 ~0.13），
+    // 容易让人误以为索引坏了。
+    let mut radii = vec![0u32, 4, 8, 12, 16, 18, 20, 22];
     let mut asymmetric = false;
     let mut adaptive = false;
     let mut coarse_factor = 10usize;
@@ -191,14 +196,30 @@ fn main() {
     );
 
     // 2. 加载 PCA
+    //
+    // ⚠️ 只在【没有 DeepHash】时才必需。
+    //    之前的版本无条件读取 `--pca`，导致 --deep-hash 模式也必须提供
+    //    一个 pca_52.bin —— 明明用不到。这里改成条件加载。
     let t0 = Instant::now();
-    let pca_bytes = std::fs::read(&args.pca).expect("读取 PCA 失败");
-    let pca = PcaProjection::from_bytes(&pca_bytes).expect("解析 PCA 失败");
-    println!(
-        "[加载 PCA] n_components={}, 耗时 {:.2?}",
-        pca.n_components,
-        t0.elapsed()
-    );
+    if args.deep_hash.is_none() {
+        let pca_bytes = std::fs::read(&args.pca).expect("读取 PCA 失败（未提供 --deep-hash 时必需）");
+        let pca = PcaProjection::from_bytes(&pca_bytes).expect("解析 PCA 失败");
+        println!(
+            "[加载 PCA] n_components={}, 耗时 {:.2?}",
+            pca.n_components,
+            t0.elapsed()
+        );
+    } else if args.pca.exists() {
+        // DeepHash 模式下 PCA 仅作参考，存在就报一下，不存在也不影响
+        if let Ok(pca_bytes) = std::fs::read(&args.pca) {
+            if let Ok(pca) = PcaProjection::from_bytes(&pca_bytes) {
+                println!("[加载 PCA] n_components={}（仅参考，实际用 DeepHash）",
+                         pca.n_components);
+            }
+        }
+    } else {
+        println!("[加载 PCA] 跳过（已提供 --deep-hash，不需要 PCA）");
+    }
 
     // 3. 构建 Encoder
     let t0 = Instant::now();

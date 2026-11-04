@@ -64,6 +64,28 @@ let dist = (a ^ b).count_ones();
 **第三阶段的后处理（召回导向贪心比特翻转）不是可选优化，而是这套方案能用的前提。**
 详见 [docs/explained.md §8.3](docs/explained.md)。
 
+### ⚠️ 关于这张表的适用边界（2026-11 补充评估）
+
+后续评估发现：**上表的 3,109 词表有 65% 是人造合成词**
+（10 个修饰词 × 约 200 个基础词，如「大U盘」「大一月」「大三月」），
+自然基础词只有约 1,114 个。这类近邻结构比自然语料**清晰 2.18 倍**
+（归一化 top-10 边界间隙），因此上表数字反映的是「结构较简单任务」上的能力。
+
+在**自然中文词表**（wordfreq 词频表）上重做，同配置下的结果：
+
+| 词表 | 规模 | 裸码 | + 后处理 |
+|---|---|---|---|
+| 合成（上表） | 3,109 | 0.499 | **0.7426** |
+| 自然 | 3,000 | 0.246 | **0.6082** |
+| 自然 | 6,000 | 0.245 | 0.5990 |
+| 自然 | 10,000 | 0.247 | 0.5936 |
+| 自然 | 16,000 | 0.252 | 0.5965 |
+
+**好消息是规模不损害召回**：词表扩大 5.3 倍，召回仅从 0.608 到 0.597 ——
+而此时每个查询的真实邻居里 **62.3% 是新增词**（100% 的查询都有新邻居）。
+
+完整数据、机制分析与索引修复见 **[docs/scale_evaluation.md](docs/scale_evaluation.md)**。
+
 ---
 
 ## 中英双语
@@ -164,6 +186,18 @@ cargo run --release --example benchmark_pure_hsh64 -- \
 | `hsh64_pretrained_3109_light.zip` | ~18 MB | 词表 + 两套嵌入缓存 + PCA-52 + Deep Hash h256 + 后处理 |
 | `hsh64_pretrained_3109_best.zip` | ~18 MB | 同上，Deep Hash h512 s42（最佳单模型） |
 | `hsh64_pretrained_3109_full.zip` | ~22 MB | 多个模型 + 多组后处理（复现 Ensemble） |
+
+**v2（自然词表，规模评估用）**
+
+| 资源包 | 大小 | 词表 | 后处理召回@10 |
+|---|---|---|---|
+| `hsh64_pretrained_natural_3000.zip` | 19 MB | 3,000 自然中文词 | 0.6082 |
+| `hsh64_pretrained_natural_6000.zip` | 36 MB | 6,000 | 0.5990 |
+| `hsh64_pretrained_natural_10000.zip` | 58 MB | 10,000 | 0.5936 |
+| `hsh64_pretrained_natural_16000.zip` | 91 MB | 16,000 | 0.5965 |
+
+每个包含：词表、学生缓存（512 维，模型输入）、教师缓存（1024 维，真值来源）、
+DeepHash 模型、后处理覆盖码、PCA 基、`MANIFEST.json`（sha256）与复现命令。
 
 > Git 仓库不含 `.bin` / `.cache` 等大文件（见 [.gitignore](.gitignore)），请从 Release 下载。
 
@@ -382,6 +416,7 @@ let (radius, results) =
 | 文档 | 内容 |
 |---|---|
 | **[docs/bilingual.md](docs/bilingual.md)** | 中英双语扩展：槽位分配、词表构建、跨语言验证、已知问题 |
+| **[docs/scale_evaluation.md](docs/scale_evaluation.md)** | **规模评估**：论文词表的合成性、自然词表 3k→16k 曲线、MIH 半径与容量上限 |
 | **[docs/explained.md](docs/explained.md)** | 通俗版设计文档：编码结构、三阶段训练、MIH、非对称距离 |
 | [docs/experiment_data_export.md](docs/experiment_data_export.md) | 完整实验数据汇总 |
 | [docs/hsh64_principle.html](docs/hsh64_principle.html) | 原理图解 |
