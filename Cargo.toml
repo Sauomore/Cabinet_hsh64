@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 authors = ["HSH Contributors"]
 description = "64-bit semantic hashing extension (feat4 + sim52 + abs8) for HSH"
-# 只有 MIT 的 LICENSE 文件，没有 Apache-2.0 正文，所以不能声称双许可
+# 单许可：仓库只有 MIT 的 LICENSE 文件，没有其他许可证正文
 license = "MIT"
 repository = "https://github.com/Sauomore/Cabinet_hsh64"
 
