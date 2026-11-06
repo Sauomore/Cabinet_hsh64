@@ -11,7 +11,7 @@
 | [explained.md](explained.md) | 从零讲起：词表与嵌入、教师相似度、Recall@K 的定义、52 位码的结构、DeepHash 网络、三阶段训练、非对称距离、MIH、两阶段检索 | 660 行 |
 
 `explained.md` 是自学路径：它假设你只知道「向量检索」是什么，
-其余概念在用到之前都会先定义。有 PDF 版：[explained.pdf](explained.pdf)。
+其余概念在用到之前都会先定义。
 
 ---
 
