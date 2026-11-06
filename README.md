@@ -487,7 +487,6 @@ hsh64/
 │   ├── bilingual.md            中英双语扩展
 │   ├── *.en.md                 各文档的英文版
 │   └── hsh64_principle.html    原理图解
-└── paper/                      论文源码与 PDF（中英）
 ```
 
 ---
@@ -521,9 +520,10 @@ hsh64/
 | **[docs/scale_evaluation.md](docs/scale_evaluation.md)** | 全部实测结果：论文基准复现、自然词表 3k→16k 曲线、与零学习基线的对比、索引半径、`abs` 容量上限、复现命令 |
 | **[docs/bilingual.md](docs/bilingual.md)** | 中英双语：`feat` 槽位分配、词表构建、跨语言对齐验证、已知限制 |
 | [docs/hsh64_principle.html](docs/hsh64_principle.html) | 原理图解 |
-| [paper/](paper/) | 论文 LaTeX 源码与 PDF（中英双版本） |
 
 以上每篇都有英文版本（文件名加 `.en`），见 [docs/README.en.md](docs/README.en.md)。
+
+论文不随本仓库分发。引用与归档版本见 [Zenodo](https://doi.org/10.5281/zenodo.21721838)。
 
 ---
 

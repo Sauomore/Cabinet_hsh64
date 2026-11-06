@@ -535,7 +535,6 @@ hsh64/
 │   ├── bilingual.en.md         Chinese–English extension
 │   ├── *.md                    Chinese versions of each document
 │   └── hsh64_principle.html    illustrated principles
-└── paper/                      paper sources and PDFs (EN + ZH)
 ```
 
 ---
@@ -570,10 +569,12 @@ hsh64/
 | **[docs/scale_evaluation.en.md](docs/scale_evaluation.en.md)** | every measured result: reproduction of the paper's benchmark, the natural-vocabulary 3k→16k curve, comparison against a zero-learning baseline, index radii, the `abs` capacity ceiling, reproduction commands |
 | **[docs/bilingual.en.md](docs/bilingual.en.md)** | Chinese–English support: `feat` slot allocation, vocabulary construction, cross-lingual alignment validation, known limitations |
 | [docs/hsh64_principle.html](docs/hsh64_principle.html) | illustrated principles |
-| [paper/](paper/) | paper sources and PDFs (EN + ZH) |
 
 Every document has a Chinese version without the `.en` suffix — see
 [docs/README.md](docs/README.md).
+
+The paper is not distributed in this repository. For the citable and archived
+version, see [Zenodo](https://doi.org/10.5281/zenodo.21721838).
 
 ---
 
