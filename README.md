@@ -523,7 +523,8 @@ hsh64/
 
 以上每篇都有英文版本（文件名加 `.en`），见 [docs/README.en.md](docs/README.en.md)。
 
-论文不随本仓库分发。引用与归档版本见 [Zenodo](https://doi.org/10.5281/zenodo.21721838)。
+论文不随本仓库分发。论文 PDF 收在 [Zenodo](https://doi.org/10.5281/zenodo.21721838)
+归档的源码包内（v1 / v2 的包内含 `paper/main.pdf` 与 `paper/main_chinese.pdf`），引用请使用该 DOI。
 
 ---
 

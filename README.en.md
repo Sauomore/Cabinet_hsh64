@@ -573,8 +573,9 @@ hsh64/
 Every document has a Chinese version without the `.en` suffix — see
 [docs/README.md](docs/README.md).
 
-The paper is not distributed in this repository. For the citable and archived
-version, see [Zenodo](https://doi.org/10.5281/zenodo.21721838).
+The paper is not distributed in this repository. The paper PDFs are inside the source
+archive on [Zenodo](https://doi.org/10.5281/zenodo.21721838) — the v1 and v2 bundles
+contain `paper/main.pdf` and `paper/main_chinese.pdf`. Use that DOI for citation.
 
 ---
 
