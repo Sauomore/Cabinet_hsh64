@@ -485,10 +485,8 @@ hsh64/
 │   ├── explained.md            设计文档（从零讲起）
 │   ├── scale_evaluation.md     全部实测结果与复现
 │   ├── bilingual.md            中英双语扩展
-│   ├── *.en.md                 各文档的英文版
-│   └── hsh64_principle.html    原理图解
+│   └── *.en.md                 各文档的英文版
 ```
-
 ---
 
 ## 当前状态
@@ -519,7 +517,6 @@ hsh64/
 | **[docs/explained.md](docs/explained.md)** | 从零讲起的设计文档：词表与嵌入、Recall@K 的定义、编码结构、DeepHash、三阶段训练、非对称距离、MIH、两阶段检索 |
 | **[docs/scale_evaluation.md](docs/scale_evaluation.md)** | 全部实测结果：论文基准复现、自然词表 3k→16k 曲线、与零学习基线的对比、索引半径、`abs` 容量上限、复现命令 |
 | **[docs/bilingual.md](docs/bilingual.md)** | 中英双语：`feat` 槽位分配、词表构建、跨语言对齐验证、已知限制 |
-| [docs/hsh64_principle.html](docs/hsh64_principle.html) | 原理图解 |
 
 以上每篇都有英文版本（文件名加 `.en`），见 [docs/README.en.md](docs/README.en.md)。
 

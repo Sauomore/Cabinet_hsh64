@@ -10,7 +10,6 @@ Organised by what you are trying to do. To look at the code instead, start with 
 | Document | Contents | Rough length |
 |---|---|---|
 | [explained.en.md](explained.en.md) | From first principles: vocabulary and embeddings, teacher similarity, what Recall@K means, the structure of the 52-bit code, the DeepHash network, three-stage training, asymmetric distance, MIH, two-stage retrieval | 660 lines |
-| [hsh64_principle.html](hsh64_principle.html) | Illustrated principles (open in a browser) | — |
 
 `explained.en.md` is the self-study path: it assumes you only know what vector retrieval is,
 and every other concept is defined before it is used.

@@ -533,8 +533,7 @@ hsh64/
 │   ├── explained.en.md         design document (from first principles)
 │   ├── scale_evaluation.en.md  every measured result and how to reproduce it
 │   ├── bilingual.en.md         Chinese–English extension
-│   ├── *.md                    Chinese versions of each document
-│   └── hsh64_principle.html    illustrated principles
+│   └── *.md                    Chinese versions of each document
 ```
 
 ---
@@ -568,7 +567,6 @@ hsh64/
 | **[docs/explained.en.md](docs/explained.en.md)** | design document from first principles: vocabulary and embeddings, what Recall@K means, codec, DeepHash, three-stage training, asymmetric distance, MIH, two-stage retrieval |
 | **[docs/scale_evaluation.en.md](docs/scale_evaluation.en.md)** | every measured result: reproduction of the paper's benchmark, the natural-vocabulary 3k→16k curve, comparison against a zero-learning baseline, index radii, the `abs` capacity ceiling, reproduction commands |
 | **[docs/bilingual.en.md](docs/bilingual.en.md)** | Chinese–English support: `feat` slot allocation, vocabulary construction, cross-lingual alignment validation, known limitations |
-| [docs/hsh64_principle.html](docs/hsh64_principle.html) | illustrated principles |
 
 Every document has a Chinese version without the `.en` suffix — see
 [docs/README.md](docs/README.md).
