@@ -260,11 +260,11 @@ This is acceptable by design — **semantic separation is carried by the 52-bit 
 share of unique codes: 99.9%), and `feat` only does coarse bucketing. But do not give it much
 weight.
 
-**⑤ Chinese–English support currently has bare-code results only.**
-The bilingual pipeline (6,109 words, Chinese–English ≈ 1:1) runs end to end, but **has no
-post-processing yet**; Recall@10 is 0.2750 and cannot be compared directly with any number above.
-Following the pattern in ④②, adding post-processing should raise it substantially — but that
-needs to be measured, not assumed.
+**⑤ Chinese–English retrieval puts the translation at a median rank of 2.**
+The bilingual vocabulary (6,109 words, Chinese–English ≈ 1:1) reaches Recall@10 = **0.6086** after
+post-processing (PCA-52 baseline 0.3503, 1.74×). Cross-lingual top-10 is **86.7%**, but 4 of the
+30 measurable pairs rank outside 50 (`猫 → cat` lands at 3,964).
+See [docs/bilingual.en.md §9](docs/bilingual.en.md).
 
 ---
 
@@ -443,8 +443,11 @@ distribution overlap.
 
 > ⚠️ But **the sample is only 40 positives / 6 negatives, so AUC = 1.0 does not extrapolate**.
 > The conclusion is limited to "the premise for cross-lingual alignment holds".
-> And the bilingual model **has no post-processing yet** (bare code 0.2750).
-> Current state and known limitations: [docs/bilingual.en.md](docs/bilingual.en.md).
+>
+> After compression to 52-bit codes: cross-lingual retrieval over the 30 measurable pairs puts
+> the translation at a median rank of **2** with **86.7%** top-10; Recall@10 after post-processing
+> is **0.6086**. 4 of the 30 pairs are known to rank outside 50.
+> Current state and known limitations: [docs/bilingual.en.md](docs/bilingual.en.md) §9.
 
 ---
 
@@ -544,18 +547,20 @@ hsh64/
 |---|---|
 | Code structure `feat(4) + sim(52) + abs(8)` | ✅ done |
 | Three-stage training pipeline | ✅ done |
-| Bilingual `feat` mapping | ✅ done (bilingual evaluation still needs post-processing) |
+| Bilingual `feat` mapping | ✅ done |
 | Mixed vocabulary, 6,109 words | ✅ done |
+| Bilingual third-stage post-processing | ✅ done (Recall@10 0.3171 → 0.6086) |
+| Cross-lingual retrieval evaluation | ✅ done (median rank 2, top-10 86.7%) |
 | Natural Chinese vocabularies 3k / 6k / 10k / 16k | ✅ done |
 | Scale evaluation (3k→16k recall curve + baselines) | ✅ done |
 | Python↔Rust parity test | ✅ done (mutation-verified) |
 | Unit + integration + parity tests | ✅ all 34 pass |
 | `abs` perfect-hash seed table | ⚠️ inert (`build_seed_table` has no call site, so `abs` loses its uniqueness guarantee) |
-| Post-processing for the bilingual model | ⚠️ not done (bare code 0.2750) |
+| Cross-lingual long tail | ⚠️ 4 of 30 measurable pairs rank outside 50 |
 
 > The inert seed table **does not affect recall** — `abs` does not participate in MIH retrieval
 > (which uses `sim` segmentation plus `feat` filtering) — but the field currently lacks the
-> uniqueness the design intends. See [docs/bilingual.en.md](docs/bilingual.en.md) §9.3.
+> uniqueness the design intends. See [docs/bilingual.en.md](docs/bilingual.en.md) §9.4.
 
 ---
 

@@ -26,6 +26,9 @@ models/
 /data/*.bin
 /data/backup_zh/
 
+# 临时产物：下划线开头的文件（如评测流水线为「不做 PCA」写出的占位基 _nobasis.npz）
+/data/_*
+
 # 规模评估的产物（226 MB 的嵌入缓存与模型）
 # 词表本身（natural_vocab_*.txt，几十 KB）要入库 —— 它是评估配置的一部分
 /data/eval/

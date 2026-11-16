@@ -348,36 +348,86 @@ cargo run --release --example benchmark_pure_hsh64 -- \
 
 ---
 
-## 9. Current state and known limitations
+## 9. Current state and measured results
 
-### 9.1 Working end to end
+### 9.1 Pipeline stages
 
 | Stage | Result |
 |---|---|
 | Mixed vocabulary | 6,109 words (Chinese–English ≈ 1:1) |
 | Bilingual tagging | 28 tags for Chinese / 31 tags for English |
-| Share of unique codes | **6058 / 6109 = 99.2%** |
+| Share of unique codes | **6,057 / 6,109 = 99.15%** |
 | Deep Hash convergence | info loss 1.5758 → 0.0080 |
 | POS wiring | ✅ 14 hard-coded call sites replaced |
+| Third-stage post-processing | ✅ done (greedy bit flipping, 10 rounds, 161.9 s) |
 
-### 9.2 Not yet done: third-stage post-processing
+### 9.2 Retrieval recall
 
-```text
-current (bare DeepHash)              Recall@10 = 0.2750
-recorded (DeepHash + post-processing) Recall@10 = 0.728
-```
+Ground truth is defined by bge-m3 cosine similarity (teacher and student are both bge-m3, so
+there is no teacher/student dimension gap). All 6,109 queries, `overlap@10` convention.
 
-The difference is that **the bilingual model has not yet had third-stage post-processing**
-(greedy bit flipping). The recorded `0.728` is the output of `sim_override_*.bin`, not the bare
-Deep Hash.
+| Method | Recall@10 | vs PCA-52 |
+|---|---|---|
+| PCA-52 (zero-learning baseline) | 0.3503 | 1.00× |
+| HSH-64 bare code | 0.3171 | 0.91× |
+| **HSH-64 + post-processing** | **0.6086** | **1.74×** |
+| same, Rust brute-force scan | 0.6131 | 1.75× |
+| same, Rust MIH (`seg=4, radius=22`) | 0.5895 | 1.68× |
 
-Post-processing is necessary for this scheme, not an optional refinement — measured on the
-natural Chinese vocabulary, the bare code at 0.246 is even below the zero-learning PCA-52
-baseline at 0.376, and only reaches 0.608 after post-processing
-(see [scale_evaluation.en.md](scale_evaluation.en.md) §3.2). So the `0.2750` above does not
-represent the final capability of bilingual retrieval.
+**Two effects that match what this scheme does on Chinese-only text:**
 
-### 9.3 Known limitations
+1. **The bare code is below PCA-52** (0.317 vs 0.350). This is the same result seen on the
+   Chinese-only vocabularies (see [scale_evaluation.en.md](scale_evaluation.en.md) §3.2), and it
+   means **post-processing is a precondition for this codec, not an optional refinement**.
+2. **After post-processing the gain over the baseline is 1.74×**, in the same range as the 1.62×
+   measured on 3,000 natural Chinese words — mixing the two languages did not destroy the benefit.
+
+> **One historical figure corrected.** This document previously recorded
+> "bare DeepHash Recall@10 = 0.2750". That number **cannot be reproduced from the current
+> artifacts** and is withdrawn. Three paths were checked and all give higher values: all 6,109
+> queries 0.3171, the first 100 queries 0.3460, a random 100 queries 0.3180; the PCA-52 path
+> gives 0.3503. So 0.2750 must have come from a different checkpoint or a different convention,
+> and the available data is not enough to reconstruct it. It is not cited further.
+
+### 9.3 Cross-lingual retrieval
+
+The point of a mixed index is that a Chinese query should retrieve the English word, so this is
+measured separately: for each Chinese–English pair, where does the target English word rank among
+**all 6,109 codes** by Hamming distance?
+
+Of 39 pairs, **30 are usable** (the other 9 have an English word outside the 3,002-word English
+vocabulary and cannot be measured: `banana` `water` `airplane` `Beijing` `Shanghai` `China`
+`America` `love` `hate`).
+
+| Code | Median rank | top-1 | top-5 | top-10 | MRR | Worst rank |
+|---|---|---|---|---|---|---|
+| Bare | 2.0 | 43.3% | 73.3% | 73.3% | 0.5656 | 4,352 |
+| **Post-processed** | **2.0** | 43.3% | 73.3% | **86.7%** | 0.5671 | 3,964 |
+| Teacher (bge-m3 cosine) | 1.0 | 76.7% | 86.7% | 93.3% | 0.8306 | 15 |
+| Negative control | 3,327 | 0% | 0% | 0% | 0.0003 | 4,953 |
+
+A random code has an expected rank near 3,054, so a median rank of 2.0 is roughly **1,500× better
+than chance**. The negative control sits near chance, so unrelated words are not being forced
+together.
+
+**Post-processing contributes mainly in the tail**: the median is unchanged (2 in both cases)
+while top-10 rises from 73.3% to 86.7%.
+
+**The long tail is real.** 4 of the 30 pairs rank outside 50:
+
+| Pair | Code rank | Teacher rank |
+|---|---|---|
+| 猫 → cat | 3,964 | ≤15 |
+| 大 → big | 902 | ≤15 |
+| 太阳 → sun | 337 | ≤15 |
+| 快 → fast | 60 | ≤15 |
+
+The post-processing objective is **average Recall@10 over the whole vocabulary**, and
+cross-lingual pairs are a tiny fraction of the neighbourhood structure, so it has no reason to
+optimise these pairs specifically. That the teacher ranks them within 15 while the code drops one
+to nearly 4,000 means quantisation lost that cross-lingual link — the teacher had established it.
+
+### 9.4 Known limitations
 
 **① `feat` has limited discriminative power**
 
@@ -405,7 +455,8 @@ The consequence is that `abs` loses its uniqueness guarantee and may collide sil
 not participate in MIH retrieval (which uses `sim` segmentation plus `feat` filtering), so recall
 is unaffected, but the field currently lacks the uniqueness the design intends.
 
-**④ Bilingual evaluation is not finished**
+**④ Cross-lingual recall has a long tail**
 
-The existing number (bare code 0.2750) lacks post-processing and cannot be compared directly
-against the Chinese-only results.
+See §9.3. 4 of the 30 measurable pairs rank outside 50, and 猫 → cat ranks 3,964. Generic
+post-processing does not optimise for cross-lingual pairs; improving this requires putting a
+cross-lingual term into the objective.

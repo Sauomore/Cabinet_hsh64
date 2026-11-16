@@ -1,0 +1,450 @@
+{
+  "n_words": 6109,
+  "n_pairs_usable": 30,
+  "missing_pairs": [
+    [
+      "香蕉",
+      "banana"
+    ],
+    [
+      "水",
+      "water"
+    ],
+    [
+      "飞机",
+      "airplane"
+    ],
+    [
+      "北京",
+      "Beijing"
+    ],
+    [
+      "上海",
+      "Shanghai"
+    ],
+    [
+      "中国",
+      "China"
+    ],
+    [
+      "美国",
+      "America"
+    ],
+    [
+      "爱",
+      "love"
+    ],
+    [
+      "恨",
+      "hate"
+    ]
+  ],
+  "results": {
+    "裸码": {
+      "name": "裸码",
+      "n": 30,
+      "median_rank": 2.0,
+      "mrr": 0.5655929714332608,
+      "top1": 0.43333333333333335,
+      "top5": 0.7333333333333333,
+      "top10": 0.7333333333333333,
+      "top50": 0.8,
+      "worst": 4352
+    },
+    "后处理": {
+      "name": "后处理",
+      "n": 30,
+      "median_rank": 2.0,
+      "mrr": 0.5671284028819424,
+      "top1": 0.43333333333333335,
+      "top5": 0.7333333333333333,
+      "top10": 0.8666666666666667,
+      "top50": 0.8666666666666667,
+      "worst": 3964
+    },
+    "teacher": {
+      "name": "teacher",
+      "n": 30,
+      "median_rank": 1.0,
+      "mrr": 0.830595238095238,
+      "top1": 0.7666666666666667,
+      "top5": 0.8666666666666667,
+      "top10": 0.9333333333333333,
+      "top50": 1.0,
+      "worst": 15
+    },
+    "neg_control": {
+      "name": "负对照",
+      "n": 3,
+      "median_rank": 3327.0,
+      "mrr": 0.0002712025642150705,
+      "top1": 0.0,
+      "top5": 0.0,
+      "top10": 0.0,
+      "top50": 0.0,
+      "worst": 4953
+    }
+  },
+  "per_pair": [
+    {
+      "zh": "苹果",
+      "en": "apple",
+      "metric": "裸码",
+      "rank": 1
+    },
+    {
+      "zh": "猫",
+      "en": "cat",
+      "metric": "裸码",
+      "rank": 647
+    },
+    {
+      "zh": "狗",
+      "en": "dog",
+      "metric": "裸码",
+      "rank": 1
+    },
+    {
+      "zh": "火",
+      "en": "fire",
+      "metric": "裸码",
+      "rank": 3
+    },
+    {
+      "zh": "太阳",
+      "en": "sun",
+      "metric": "裸码",
+      "rank": 839
+    },
+    {
+      "zh": "月亮",
+      "en": "moon",
+      "metric": "裸码",
+      "rank": 2
+    },
+    {
+      "zh": "山",
+      "en": "mountain",
+      "metric": "裸码",
+      "rank": 1
+    },
+    {
+      "zh": "河",
+      "en": "river",
+      "metric": "裸码",
+      "rank": 2
+    },
+    {
+      "zh": "树",
+      "en": "tree",
+      "metric": "裸码",
+      "rank": 2
+    },
+    {
+      "zh": "花",
+      "en": "flower",
+      "metric": "裸码",
+      "rank": 1
+    },
+    {
+      "zh": "学校",
+      "en": "school",
+      "metric": "裸码",
+      "rank": 1
+    },
+    {
+      "zh": "老师",
+      "en": "teacher",
+      "metric": "裸码",
+      "rank": 1
+    },
+    {
+      "zh": "学生",
+      "en": "student",
+      "metric": "裸码",
+      "rank": 1
+    },
+    {
+      "zh": "医生",
+      "en": "doctor",
+      "metric": "裸码",
+      "rank": 2
+    },
+    {
+      "zh": "医生",
+      "en": "physician",
+      "metric": "裸码",
+      "rank": 1
+    },
+    {
+      "zh": "书",
+      "en": "book",
+      "metric": "裸码",
+      "rank": 1
+    },
+    {
+      "zh": "计算机",
+      "en": "computer",
+      "metric": "裸码",
+      "rank": 1
+    },
+    {
+      "zh": "手机",
+      "en": "phone",
+      "metric": "裸码",
+      "rank": 39
+    },
+    {
+      "zh": "汽车",
+      "en": "car",
+      "metric": "裸码",
+      "rank": 1
+    },
+    {
+      "zh": "火车",
+      "en": "train",
+      "metric": "裸码",
+      "rank": 3
+    },
+    {
+      "zh": "快乐",
+      "en": "happy",
+      "metric": "裸码",
+      "rank": 15
+    },
+    {
+      "zh": "悲伤",
+      "en": "sad",
+      "metric": "裸码",
+      "rank": 612
+    },
+    {
+      "zh": "大",
+      "en": "big",
+      "metric": "裸码",
+      "rank": 4352
+    },
+    {
+      "zh": "小",
+      "en": "small",
+      "metric": "裸码",
+      "rank": 2
+    },
+    {
+      "zh": "快",
+      "en": "fast",
+      "metric": "裸码",
+      "rank": 1862
+    },
+    {
+      "zh": "慢",
+      "en": "slow",
+      "metric": "裸码",
+      "rank": 5
+    },
+    {
+      "zh": "热",
+      "en": "hot",
+      "metric": "裸码",
+      "rank": 1
+    },
+    {
+      "zh": "冷",
+      "en": "cold",
+      "metric": "裸码",
+      "rank": 1
+    },
+    {
+      "zh": "新",
+      "en": "new",
+      "metric": "裸码",
+      "rank": 2
+    },
+    {
+      "zh": "旧",
+      "en": "old",
+      "metric": "裸码",
+      "rank": 272
+    },
+    {
+      "zh": "苹果",
+      "en": "apple",
+      "metric": "后处理",
+      "rank": 1
+    },
+    {
+      "zh": "猫",
+      "en": "cat",
+      "metric": "后处理",
+      "rank": 3964
+    },
+    {
+      "zh": "狗",
+      "en": "dog",
+      "metric": "后处理",
+      "rank": 1
+    },
+    {
+      "zh": "火",
+      "en": "fire",
+      "metric": "后处理",
+      "rank": 1
+    },
+    {
+      "zh": "太阳",
+      "en": "sun",
+      "metric": "后处理",
+      "rank": 337
+    },
+    {
+      "zh": "月亮",
+      "en": "moon",
+      "metric": "后处理",
+      "rank": 2
+    },
+    {
+      "zh": "山",
+      "en": "mountain",
+      "metric": "后处理",
+      "rank": 1
+    },
+    {
+      "zh": "河",
+      "en": "river",
+      "metric": "后处理",
+      "rank": 2
+    },
+    {
+      "zh": "树",
+      "en": "tree",
+      "metric": "后处理",
+      "rank": 6
+    },
+    {
+      "zh": "花",
+      "en": "flower",
+      "metric": "后处理",
+      "rank": 1
+    },
+    {
+      "zh": "学校",
+      "en": "school",
+      "metric": "后处理",
+      "rank": 4
+    },
+    {
+      "zh": "老师",
+      "en": "teacher",
+      "metric": "后处理",
+      "rank": 1
+    },
+    {
+      "zh": "学生",
+      "en": "student",
+      "metric": "后处理",
+      "rank": 1
+    },
+    {
+      "zh": "医生",
+      "en": "doctor",
+      "metric": "后处理",
+      "rank": 2
+    },
+    {
+      "zh": "医生",
+      "en": "physician",
+      "metric": "后处理",
+      "rank": 1
+    },
+    {
+      "zh": "书",
+      "en": "book",
+      "metric": "后处理",
+      "rank": 1
+    },
+    {
+      "zh": "计算机",
+      "en": "computer",
+      "metric": "后处理",
+      "rank": 3
+    },
+    {
+      "zh": "手机",
+      "en": "phone",
+      "metric": "后处理",
+      "rank": 10
+    },
+    {
+      "zh": "汽车",
+      "en": "car",
+      "metric": "后处理",
+      "rank": 1
+    },
+    {
+      "zh": "火车",
+      "en": "train",
+      "metric": "后处理",
+      "rank": 3
+    },
+    {
+      "zh": "快乐",
+      "en": "happy",
+      "metric": "后处理",
+      "rank": 4
+    },
+    {
+      "zh": "悲伤",
+      "en": "sad",
+      "metric": "后处理",
+      "rank": 6
+    },
+    {
+      "zh": "大",
+      "en": "big",
+      "metric": "后处理",
+      "rank": 902
+    },
+    {
+      "zh": "小",
+      "en": "small",
+      "metric": "后处理",
+      "rank": 1
+    },
+    {
+      "zh": "快",
+      "en": "fast",
+      "metric": "后处理",
+      "rank": 60
+    },
+    {
+      "zh": "慢",
+      "en": "slow",
+      "metric": "后处理",
+      "rank": 4
+    },
+    {
+      "zh": "热",
+      "en": "hot",
+      "metric": "后处理",
+      "rank": 2
+    },
+    {
+      "zh": "冷",
+      "en": "cold",
+      "metric": "后处理",
+      "rank": 1
+    },
+    {
+      "zh": "新",
+      "en": "new",
+      "metric": "后处理",
+      "rank": 1
+    },
+    {
+      "zh": "旧",
+      "en": "old",
+      "metric": "后处理",
+      "rank": 7
+    }
+  ]
+}
