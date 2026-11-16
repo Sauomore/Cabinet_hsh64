@@ -172,12 +172,25 @@ def main() -> int:
     ap.add_argument("--tag", default="v2.0")
     ap.add_argument("--name", default="HSH-64 v2: Natural Vocabulary Models")
     ap.add_argument("--dist", type=Path, default=ROOT / "dist")
+    ap.add_argument("--only", default=None,
+                    help="逗号分隔的子串；只上传名字含其中之一的分包（用于只发某一个包）")
+    ap.add_argument("--body-file", type=Path, default=None,
+                    help="用文件内容代替内置的 release 说明")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--skip-create", action="store_true",
                     help="release 已存在，只补传 asset")
     args = ap.parse_args()
 
     zips = sorted(args.dist.glob("*.zip"))
+    if args.only:
+        terms = [t.strip() for t in args.only.split(",") if t.strip()]
+        before = len(zips)
+        zips = [z for z in zips if any(t in z.name for t in terms)]
+        print(f"  --only {terms} 过滤：{before} -> {len(zips)} 个")
+    body = RELEASE_BODY
+    if args.body_file:
+        body = args.body_file.read_text(encoding="utf-8")
+        print(f"  说明来源：{args.body_file}（{len(body)} 字符）")
     print("=" * 74)
     print("上传 Release 资源")
     print("=" * 74)
@@ -244,7 +257,7 @@ def main() -> int:
         else:
             st, rel = api("POST", f"{API}/repos/{OWNER}/{REPO}/releases", tok,
                           data={"tag_name": args.tag, "name": args.name,
-                                "body": RELEASE_BODY, "draft": True,
+                                "body": body, "draft": True,
                                 "prerelease": False})
             if st not in (200, 201):
                 print(f"  ❌ 创建 release 失败 HTTP {st}: {rel}")
