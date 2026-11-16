@@ -28,6 +28,7 @@ At a glance:
 paper benchmark (3,109 words)   bare 0.4988   + post-processing 0.7426   two-stage 0.8890
 natural vocabulary (3,000)      bare 0.2463   + post-processing 0.6082
 natural vocabulary (16,000)     bare 0.2519   + post-processing 0.5965
+Chinese–English (6,109)         bare 0.3171   + post-processing 0.6086   cross-lingual top-10 86.7%
 ```
 
 ---

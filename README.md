@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/1307857867.svg)](https://doi.org/10.5281/zenodo.21721838)
 [![GitHub release](https://img.shields.io/github/v/release/Sauomore/Cabinet_hsh64?include_prereleases&style=flat-square)](https://github.com/Sauomore/Cabinet_hsh64/releases)
-[![Version](https://img.shields.io/badge/version-2.0-blue?style=flat-square)](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.0)
+[![Version](https://img.shields.io/badge/version-2.5-blue?style=flat-square)](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.5)
 
 **中文** ｜ [English](README.en.md)
 
@@ -10,8 +10,10 @@
 > 意思相近的词，指纹只差几位；比较两个词有多像，只需要一次异或加一次 popcount。
 > 纯 CPU，一个核心每秒能比几千万对。
 
-**当前版本 v2.0** —— 新增自然词表模型（3k / 6k / 10k / 16k）与规模评估，修复索引两处缺陷。
-详见[发布页](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.0)。
+**当前版本 v2.5** —— 中英双语模型补上第三阶段后处理（Recall@10 **0.3171 → 0.6086**），
+并测了跨语言检索（中位 rank **2**，top-10 86.7%）。
+上一版 v2.0 新增自然词表模型（3k / 6k / 10k / 16k）与规模评估，修复索引两处缺陷。
+详见[发布页](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.5)。
 
 ---
 
@@ -255,6 +257,15 @@ cargo run --release --example benchmark_pure_hsh64 -- \
     --reranker   teacher_bge_large.cache \
     --top-k 10 --queries 3000
 ```
+
+**v2.5 提供的中英双语模型**（对应上面「⑤ 中英双语」那条）：
+
+| 资源包 | 大小 | 词表 | 后处理召回@10 | 跨语言 top-10 |
+|---|---|---|---|---|
+| `hsh64_pretrained_bilingual_6109.zip` | 24.5 MB | 6,109（中 3,095 / 英 3,002 / 混合 12） | 0.6086 | 86.7% |
+
+包里额外带两样双语必需的东西：`pos_tags.tsv`（词性表，Rust 端必须 `--pos-tags` 载入）
+和 `pca_52.bin`（PCA-52 基线 0.3503，用于复现对比）。
 
 **v2.0 提供的自然词表模型**（推荐用这个，它对应上面「自然词表」那几行）：
 

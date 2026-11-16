@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/1307857867.svg)](https://doi.org/10.5281/zenodo.21721838)
 [![GitHub release](https://img.shields.io/github/v/release/Sauomore/Cabinet_hsh64?include_prereleases&style=flat-square)](https://github.com/Sauomore/Cabinet_hsh64/releases)
-[![Version](https://img.shields.io/badge/version-2.0-blue?style=flat-square)](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.0)
+[![Version](https://img.shields.io/badge/version-2.5-blue?style=flat-square)](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.5)
 
 [中文](README.md) ｜ **English**
 
@@ -11,9 +11,11 @@
 > one XOR plus one popcount.
 > Pure CPU — a single core compares tens of millions of pairs per second.
 
-**Current version v2.0** — adds natural-vocabulary models (3k / 6k / 10k / 16k) with a scale
-evaluation, and fixes two index defects.
-See the [release page](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.0).
+**Current version v2.5** — the Chinese–English model gains third-stage post-processing
+(Recall@10 **0.3171 → 0.6086**) and a cross-lingual evaluation (median rank **2**, top-10 86.7%).
+The previous v2.0 added natural-vocabulary models (3k / 6k / 10k / 16k) with a scale evaluation
+and fixed two index defects.
+See the [release page](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.5).
 
 ---
 
@@ -294,6 +296,15 @@ cargo run --release --example benchmark_pure_hsh64 -- \
     --reranker   teacher_bge_large.cache \
     --top-k 10 --queries 3000
 ```
+
+**Chinese–English model shipped in v2.5** (corresponds to item ⑤ above):
+
+| Bundle | Size | Vocabulary | Recall@10 after post-processing | Cross-lingual top-10 |
+|---|---|---|---|---|
+| `hsh64_pretrained_bilingual_6109.zip` | 24.5 MB | 6,109 (3,095 zh / 3,002 en / 12 mixed) | 0.6086 | 86.7% |
+
+The bundle carries two extras the bilingual setup needs: `pos_tags.tsv` (the tag table, which
+Rust must load via `--pos-tags`) and `pca_52.bin` (the PCA-52 baseline, 0.3503, for comparison).
 
 **Natural-vocabulary models shipped in v2.0** (recommended — these correspond to the "Natural"
 rows above):
