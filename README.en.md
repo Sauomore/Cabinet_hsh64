@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/1307857867.svg)](https://doi.org/10.5281/zenodo.21721838)
 [![GitHub release](https://img.shields.io/github/v/release/Sauomore/Cabinet_hsh64?include_prereleases&style=flat-square)](https://github.com/Sauomore/Cabinet_hsh64/releases)
-[![Version](https://img.shields.io/badge/version-2.5-blue?style=flat-square)](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.5)
+[![Version](https://img.shields.io/badge/version-2.8-blue?style=flat-square)](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.8)
 
 [中文](README.md) ｜ **English**
 
@@ -11,11 +11,14 @@
 > one XOR plus one popcount.
 > Pure CPU — a single core compares tens of millions of pairs per second.
 
-**Current version v2.5** — the Chinese–English model gains third-stage post-processing
-(Recall@10 **0.3171 → 0.6086**) and a cross-lingual evaluation (median rank **2**, top-10 86.7%).
-The previous v2.0 added natural-vocabulary models (3k / 6k / 10k / 16k) with a scale evaluation
-and fixed two index defects.
-See the [release page](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.5).
+**Current version v2.8** — the comparison baselines are now complete: a four-encoder bit-width
+ablation (LSH / PCA / ITQ / DeepHash over 8–52 bits), a same-memory PQ / OPQ comparison, and the
+scale curve re-measured on a common metric.
+**Two of those results go against this project and are recorded as they are**: at 52 bits
+ITQ + post-processing (**0.7974**) beats our DeepHash (0.7420), and OPQ-8B (**0.8150**) beats it
+while using 22× the total memory.
+The previous v2.5 added third-stage post-processing for the Chinese–English model (0.3171 → 0.6086).
+See the [release page](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.8).
 
 ---
 

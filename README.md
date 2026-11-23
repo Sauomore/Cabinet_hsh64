@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/1307857867.svg)](https://doi.org/10.5281/zenodo.21721838)
 [![GitHub release](https://img.shields.io/github/v/release/Sauomore/Cabinet_hsh64?include_prereleases&style=flat-square)](https://github.com/Sauomore/Cabinet_hsh64/releases)
-[![Version](https://img.shields.io/badge/version-2.5-blue?style=flat-square)](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.5)
+[![Version](https://img.shields.io/badge/version-2.8-blue?style=flat-square)](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.8)
 
 **中文** ｜ [English](README.en.md)
 
@@ -10,10 +10,11 @@
 > 意思相近的词，指纹只差几位；比较两个词有多像，只需要一次异或加一次 popcount。
 > 纯 CPU，一个核心每秒能比几千万对。
 
-**当前版本 v2.5** —— 中英双语模型补上第三阶段后处理（Recall@10 **0.3171 → 0.6086**），
-并测了跨语言检索（中位 rank **2**，top-10 86.7%）。
-上一版 v2.0 新增自然词表模型（3k / 6k / 10k / 16k）与规模评估，修复索引两处缺陷。
-详见[发布页](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.5)。
+**当前版本 v2.8** —— 补齐全部对照基线：四编码器码宽消融（LSH / PCA / ITQ / DeepHash，8–52 位）、
+同内存 PQ / OPQ 对比、四档规模曲线同口径重测。
+**其中两项结论对本文不利，已如实记录**：52 位上 ITQ + 后处理（**0.7974**）高于本文 DeepHash（0.7420）；
+OPQ-8B（**0.8150**）以 22 倍总内存反超。上一版 v2.5 补上了中英双语模型的第三阶段后处理（0.3171 → 0.6086）。
+详见[发布页](https://github.com/Sauomore/Cabinet_hsh64/releases/tag/v2.8)。
 
 ---
 
