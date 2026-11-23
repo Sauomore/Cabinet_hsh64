@@ -1,0 +1,86 @@
+{
+ "tag": "synth3109",
+ "n": 3109,
+ "teacher_dim": 1024,
+ "student_dim": 512,
+ "results": {
+  "pca512_pq8B": {
+   "recall": 0.7104856867159858,
+   "codebook_bytes": 524288,
+   "total_bytes": 549160,
+   "fit_s": 5.4753098487854
+  },
+  "pca512_opq8B": {
+   "recall": 0.814988742360899,
+   "codebook_bytes": 524288,
+   "total_bytes": 549160,
+   "fit_s": 34.25228834152222,
+   "quant_err": 0.0002924345504404094
+  },
+  "pca512_pq16B": {
+   "recall": 0.7896108073335545,
+   "codebook_bytes": 524288,
+   "total_bytes": 574032,
+   "fit_s": 5.74871563911438
+  },
+  "pca512_pq32B": {
+   "recall": 0.8495014474107591,
+   "codebook_bytes": 524288,
+   "total_bytes": 623776,
+   "fit_s": 8.361040830612183
+  },
+  "teacher1024_pq8B": {
+   "recall": 0.679543261498878,
+   "codebook_bytes": 1048576,
+   "total_bytes": 1073448,
+   "fit_s": 3.8388779163360596
+  },
+  "teacher1024_opq8B": {
+   "recall": 0.8081055001608337,
+   "codebook_bytes": 1048576,
+   "total_bytes": 1073448,
+   "fit_s": 70.03039455413818,
+   "quant_err": 9.963018865100415e-05
+  },
+  "teacher1024_pq16B": {
+   "recall": 0.6972981666130607,
+   "codebook_bytes": 1048576,
+   "total_bytes": 1098320,
+   "fit_s": 5.754974365234375
+  },
+  "teacher1024_pq32B": {
+   "recall": 0.7454486973303346,
+   "codebook_bytes": 1048576,
+   "total_bytes": 1148064,
+   "fit_s": 11.011985778808594
+  }
+ },
+ "comparison": [
+  {
+   "method": "PQ-8B (PCA-512)",
+   "recall": 0.7104856867159858,
+   "total_bytes": 549160
+  },
+  {
+   "method": "OPQ-8B (PCA-512)",
+   "recall": 0.814988742360899,
+   "total_bytes": 549160
+  },
+  {
+   "method": "PQ-8B (teacher 1024)",
+   "recall": 0.679543261498878,
+   "total_bytes": 1073448
+  },
+  {
+   "method": "HSH ITQ-52 + post",
+   "recall": 0.7974268253457776,
+   "total_bytes": 24872
+  },
+  {
+   "method": "HSH PCA-52 裸码",
+   "recall": 0.6124798970730158,
+   "total_bytes": 24872
+  }
+ ],
+ "seconds": 144.54137301445007
+}
