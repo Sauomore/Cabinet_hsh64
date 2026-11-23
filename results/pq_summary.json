@@ -1,0 +1,228 @@
+{
+ "hsh_record": {
+  "nat3000": 0.6082,
+  "nat6000": 0.599,
+  "nat10000": 0.5936,
+  "nat16000": 0.5965,
+  "mixed6109": 0.6086
+ },
+ "datasets": {
+  "nat3000": {
+   "n": 3000,
+   "hsh": 0.6082,
+   "hsh_total_kb": 23.4375,
+   "rows": [
+    {
+     "method": "HSH-64",
+     "bytes_per_item": 8,
+     "codebook_bytes": 0,
+     "total_kb": 23.4375,
+     "recall": 0.6082
+    },
+    {
+     "method": "PQ-8B@pca512",
+     "bytes_per_item": 8,
+     "codebook_bytes": 524288,
+     "total_kb": 535.4375,
+     "recall": 0.6087999999999983
+    },
+    {
+     "method": "PQ-16B@pca512",
+     "bytes_per_item": 16,
+     "codebook_bytes": 524288,
+     "total_kb": 558.875,
+     "recall": 0.6791333333333314
+    },
+    {
+     "method": "PQ-32B@pca512",
+     "bytes_per_item": 32,
+     "codebook_bytes": 524288,
+     "total_kb": 605.75,
+     "recall": 0.7353999999999998
+    },
+    {
+     "method": "PQ-8B@teacher1024",
+     "bytes_per_item": 8,
+     "codebook_bytes": 1048576,
+     "total_kb": 1047.4375,
+     "recall": 0.5788666666666668
+    },
+    {
+     "method": "PQ-16B@teacher1024",
+     "bytes_per_item": 16,
+     "codebook_bytes": 1048576,
+     "total_kb": 1070.875,
+     "recall": 0.6437666666666659
+    },
+    {
+     "method": "PQ-32B@teacher1024",
+     "bytes_per_item": 32,
+     "codebook_bytes": 1048576,
+     "total_kb": 1117.75,
+     "recall": 0.7275999999999998
+    },
+    {
+     "method": "PCA-512 浮点",
+     "bytes_per_item": 2048,
+     "codebook_bytes": 0,
+     "total_kb": 6000.0,
+     "recall": 0.8375666666666826
+    }
+   ]
+  },
+  "nat6000": {
+   "n": 6000,
+   "hsh": 0.599,
+   "hsh_total_kb": 46.875,
+   "rows": [
+    {
+     "method": "HSH-64",
+     "bytes_per_item": 8,
+     "codebook_bytes": 0,
+     "total_kb": 46.875,
+     "recall": 0.599
+    },
+    {
+     "method": "PQ-8B@pca512",
+     "bytes_per_item": 8,
+     "codebook_bytes": 524288,
+     "total_kb": 558.875,
+     "recall": 0.575383333333327
+    },
+    {
+     "method": "PQ-8B@teacher1024",
+     "bytes_per_item": 8,
+     "codebook_bytes": 1048576,
+     "total_kb": 1070.875,
+     "recall": 0.5040666666666663
+    },
+    {
+     "method": "PCA-512 浮点",
+     "bytes_per_item": 2048,
+     "codebook_bytes": 0,
+     "total_kb": 12000.0,
+     "recall": 0.8527500000000103
+    }
+   ]
+  },
+  "nat10000": {
+   "n": 10000,
+   "hsh": 0.5936,
+   "hsh_total_kb": 78.125,
+   "rows": [
+    {
+     "method": "HSH-64",
+     "bytes_per_item": 8,
+     "codebook_bytes": 0,
+     "total_kb": 78.125,
+     "recall": 0.5936
+    },
+    {
+     "method": "PQ-8B@pca512",
+     "bytes_per_item": 8,
+     "codebook_bytes": 524288,
+     "total_kb": 590.125,
+     "recall": 0.5497299999999966
+    },
+    {
+     "method": "PQ-8B@teacher1024",
+     "bytes_per_item": 8,
+     "codebook_bytes": 1048576,
+     "total_kb": 1102.125,
+     "recall": 0.44514
+    },
+    {
+     "method": "PCA-512 浮点",
+     "bytes_per_item": 2048,
+     "codebook_bytes": 0,
+     "total_kb": 20000.0,
+     "recall": 0.8601799999999521
+    }
+   ]
+  },
+  "nat16000": {
+   "n": 16000,
+   "hsh": 0.5965,
+   "hsh_total_kb": 125.0,
+   "rows": [
+    {
+     "method": "HSH-64",
+     "bytes_per_item": 8,
+     "codebook_bytes": 0,
+     "total_kb": 125.0,
+     "recall": 0.5965
+    },
+    {
+     "method": "PQ-8B@pca512",
+     "bytes_per_item": 8,
+     "codebook_bytes": 524288,
+     "total_kb": 637.0,
+     "recall": 0.5207625000000016
+    },
+    {
+     "method": "PQ-16B@pca512",
+     "bytes_per_item": 16,
+     "codebook_bytes": 524288,
+     "total_kb": 762.0,
+     "recall": 0.6383062500000198
+    },
+    {
+     "method": "PQ-32B@pca512",
+     "bytes_per_item": 32,
+     "codebook_bytes": 524288,
+     "total_kb": 1012.0,
+     "recall": 0.7264562500000008
+    },
+    {
+     "method": "PQ-8B@teacher1024",
+     "bytes_per_item": 8,
+     "codebook_bytes": 1048576,
+     "total_kb": 1149.0,
+     "recall": 0.38198125
+    },
+    {
+     "method": "PQ-16B@teacher1024",
+     "bytes_per_item": 16,
+     "codebook_bytes": 1048576,
+     "total_kb": 1274.0,
+     "recall": 0.49599374999999896
+    },
+    {
+     "method": "PQ-32B@teacher1024",
+     "bytes_per_item": 32,
+     "codebook_bytes": 1048576,
+     "total_kb": 1524.0,
+     "recall": 0.6534750000000158
+    },
+    {
+     "method": "PCA-512 浮点",
+     "bytes_per_item": 2048,
+     "codebook_bytes": 0,
+     "total_kb": 32000.0,
+     "recall": 0.8661437499998614
+    }
+   ]
+  },
+  "mixed6109": {
+   "n": 6109,
+   "hsh": 0.6086,
+   "hsh_total_kb": 47.7265625,
+   "rows": [
+    {
+     "method": "HSH-64",
+     "bytes_per_item": 8,
+     "codebook_bytes": 0,
+     "total_kb": 47.7265625,
+     "recall": 0.6086
+    },
+    {
+     "method": "PQ-8B@teacher1024",
+     "bytes_per_item": 8,
+     "codebook_bytes": 1048576,
+     "total_kb": 1071.7265625,
+     "recall": 0.448633164183993
+    }
+   ]
+  }
+ }
+}

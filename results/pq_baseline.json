@@ -1,0 +1,150 @@
+{
+ "budgets_bytes": [
+  8
+ ],
+ "datasets": {
+  "nat3000": {
+   "n": 3000,
+   "teacher_dim": 1024,
+   "hsh_record": 0.6082,
+   "hsh_recomputed": 0.608233333333332,
+   "hsh_check_ok": true,
+   "teacher_float_bytes": 4096,
+   "teacher_float_recall": 1.0,
+   "pca512_float": {
+    "recall": 0.8375666666666826,
+    "bytes": 2048
+   },
+   "pq": {
+    "teacher1024_pq8B": {
+     "recall": 0.5788666666666668,
+     "bytes_per_item": 8,
+     "codebook_bytes": 1048576,
+     "total_bytes": 1072576,
+     "qps": 7853.2861329831585,
+     "fit_s": 14.501054048538208
+    },
+    "pca512_pq8B": {
+     "recall": 0.6087999999999983,
+     "bytes_per_item": 8,
+     "codebook_bytes": 524288,
+     "total_bytes": 548288,
+     "qps": 8901.853251042083,
+     "fit_s": 4.668285846710205
+    }
+   }
+  },
+  "nat6000": {
+   "n": 6000,
+   "teacher_dim": 1024,
+   "hsh_record": 0.599,
+   "hsh_recomputed": 0.5989999999999966,
+   "hsh_check_ok": true,
+   "teacher_float_bytes": 4096,
+   "teacher_float_recall": 1.0,
+   "pca512_float": {
+    "recall": 0.8527500000000103,
+    "bytes": 2048
+   },
+   "pq": {
+    "teacher1024_pq8B": {
+     "recall": 0.5040666666666663,
+     "bytes_per_item": 8,
+     "codebook_bytes": 1048576,
+     "total_bytes": 1096576,
+     "qps": 4603.016582754827,
+     "fit_s": 22.40410828590393
+    },
+    "pca512_pq8B": {
+     "recall": 0.575383333333327,
+     "bytes_per_item": 8,
+     "codebook_bytes": 524288,
+     "total_bytes": 572288,
+     "qps": 3934.8246140433225,
+     "fit_s": 8.49012017250061
+    }
+   }
+  },
+  "nat10000": {
+   "n": 10000,
+   "teacher_dim": 1024,
+   "hsh_record": 0.5936,
+   "hsh_recomputed": 0.5936199999999989,
+   "hsh_check_ok": true,
+   "teacher_float_bytes": 4096,
+   "teacher_float_recall": 1.0,
+   "pca512_float": {
+    "recall": 0.8601799999999521,
+    "bytes": 2048
+   },
+   "pq": {
+    "teacher1024_pq8B": {
+     "recall": 0.44514,
+     "bytes_per_item": 8,
+     "codebook_bytes": 1048576,
+     "total_bytes": 1128576,
+     "qps": 2440.257585020581,
+     "fit_s": 37.05256271362305
+    },
+    "pca512_pq8B": {
+     "recall": 0.5497299999999966,
+     "bytes_per_item": 8,
+     "codebook_bytes": 524288,
+     "total_bytes": 604288,
+     "qps": 2308.166674756221,
+     "fit_s": 14.222091913223267
+    }
+   }
+  },
+  "nat16000": {
+   "n": 16000,
+   "teacher_dim": 1024,
+   "hsh_record": 0.5965,
+   "hsh_recomputed": 0.596537500000003,
+   "hsh_check_ok": true,
+   "teacher_float_bytes": 4096,
+   "teacher_float_recall": 1.0,
+   "pca512_float": {
+    "recall": 0.8661437499998614,
+    "bytes": 2048
+   },
+   "pq": {
+    "teacher1024_pq8B": {
+     "recall": 0.38198125,
+     "bytes_per_item": 8,
+     "codebook_bytes": 1048576,
+     "total_bytes": 1176576,
+     "qps": 1230.646405261527,
+     "fit_s": 46.402639627456665
+    },
+    "pca512_pq8B": {
+     "recall": 0.5207625000000016,
+     "bytes_per_item": 8,
+     "codebook_bytes": 524288,
+     "total_bytes": 652288,
+     "qps": 1168.9133662898978,
+     "fit_s": 14.683114051818848
+    }
+   }
+  },
+  "mixed6109": {
+   "n": 6109,
+   "teacher_dim": 1024,
+   "hsh_record": 0.6086,
+   "hsh_recomputed": 0.6086429857587176,
+   "hsh_check_ok": true,
+   "teacher_float_bytes": 4096,
+   "teacher_float_recall": 1.0,
+   "pq": {
+    "teacher1024_pq8B": {
+     "recall": 0.448633164183993,
+     "bytes_per_item": 8,
+     "codebook_bytes": 1048576,
+     "total_bytes": 1097448,
+     "qps": 4052.5176258319775,
+     "fit_s": 17.375757217407227
+    }
+   }
+  }
+ }
+}

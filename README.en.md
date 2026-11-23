@@ -228,6 +228,71 @@ only 10.2% overlap with the vocabulary above):
 Full data, mechanism analysis and index parameter selection:
 **[docs/scale_evaluation.en.md](docs/scale_evaluation.en.md)**.
 
+### Same-memory comparison: PQ-8B (also 8 bytes per item)
+
+At 8 bytes per item the most direct competitor is not a float index but **product quantisation
+(PQ) at the same 8 bytes**. This comparison was added later and is fully reproducible here
+(`scripts/65_pq_baseline.py`):
+
+| Method | Per item | Codebook (fixed cost) | Total @ 3,000 | Total @ 16,000 | Recall@10 (3k) | Recall@10 (16k) |
+|---|---|---|---|---|---|---|
+| **HSH-64** | 8 B | **0** | **23 KB** | **125 KB** | **0.6082** | **0.5965** |
+| PQ-8B (PCA-512 input) | 8 B | 512 KB | 535 KB | 637 KB | 0.6088 | 0.5208 |
+| PQ-8B (teacher 1024d input) | 8 B | 1024 KB | 1047 KB | 1149 KB | 0.5789 | 0.3820 |
+
+A PQ **codebook is a fixed cost** independent of vocabulary size; HSH-64 has none. Hence:
+
+- 3,000 words: HSH-64 totals 23 KB, the smallest PQ config 535 KB — **23×**
+- 16,000 words: HSH-64 totals 125 KB, the smallest PQ config 637 KB — **5.1×**, **and HSH-64
+  recall is 0.076 higher**
+
+The more interesting difference is **behaviour under scale**: at 8 bytes PQ recall collapses
+monotonically as the vocabulary grows (0.6088 → 0.5754 → 0.5497 → 0.5208) while HSH-64 stays flat
+(0.6082 → 0.5965). The 3k→16k drop differs by **7.5×**.
+
+**The counter-example must be stated too**: give PQ twice the memory (16 B/item) and it overtakes
+us — 0.6791 at 559 KB on 3,000 words, 0.6383 at 762 KB on 16,000 words. Roughly every 4× more
+memory buys about 0.07 recall.
+**So the claim is "no competitor in the very small memory bracket", not "better overall".**
+
+Pareto plot: `results/pq_pareto.png`.
+
+### Bit-width boundary: when DeepHash is actually required
+
+Eight widths × two encoders × bare/post-processed, synthetic 3,109 words, DeepHash averaged over
+3 seeds (`scripts/67_bitwidth_sweep.py`):
+
+| sim width | PCA bare | PCA + post | DH bare | DH + post | Winner after post |
+|---|---|---|---|---|---|
+| 8 | 0.0366 | 0.1321 | **0.3227** | 0.2213 | **DH +0.089** |
+| 12 | 0.0671 | 0.3623 | **0.3675** | **0.4758** | **DH +0.114** |
+| 16 | 0.1098 | 0.6029 | **0.3791** | **0.6270** | **DH +0.024** |
+| 20 | 0.1537 | **0.6659** | 0.4019 | 0.6593 | PCA +0.007 |
+| 32 | 0.3600 | **0.7349** | 0.4443 | 0.7096 | PCA +0.025 |
+| 40 | 0.4974 | **0.7566** | 0.4686 | 0.7255 | PCA +0.031 |
+| 48 | 0.5859 | **0.7726** | 0.4860 | 0.7370 | PCA +0.036 |
+| 52 | 0.6125 | **0.7800** | 0.4927 | 0.7420 | PCA +0.038 |
+
+**Three conclusions:**
+
+1. **At ≤ 16 bits DeepHash is required.** At 8 bits the bare code is **8.8×** PCA
+   (0.3227 vs 0.0366), stable across 3 seeds (±0.006). A linear projection cannot hold the
+   information in a very short code; non-linear selection is necessary.
+2. **At ≥ 20 bits PCA + post-processing wins.** The bare-code crossover is at 32→40 bits; after
+   post-processing it moves earlier, to 16→20 bits.
+3. **Post-processing is harmful when the code space is saturated.** At 8 bits there are only 256
+   codes for 3,109 words (unique rate 8.2%), and greedy flipping pushes DH from 0.3227 down to
+   0.2213. The post-processing gain peaks at 16–20 bits (PCA +0.49 to +0.51).
+
+**This implies a fact that must be admitted**: HSH-64 uses 52 bits, which lands on the
+"PCA is better" side — measured **PCA-52 + post-processing = 0.7800 > DeepHash + post-processing
+= 0.7422**. In other words, **at 52 bits the third stage (post-processing) is what matters, and the
+first two DeepHash stages are not necessary**; their value is concentrated in the short-code regime.
+This result was produced by the project itself and is recorded as it is.
+
+Curve: `results/bitwidth_sweep.png`.
+
+
 ---
 
 ## What it is not good at
@@ -267,6 +332,13 @@ The bilingual vocabulary (6,109 words, Chinese–English ≈ 1:1) reaches Recall
 post-processing (PCA-52 baseline 0.3503, 1.74×). Cross-lingual top-10 is **86.7%**, but 4 of the
 30 measurable pairs rank outside 50 (`猫 → cat` lands at 3,964).
 See [docs/bilingual.en.md §9](docs/bilingual.en.md).
+
+**⑥ At 52 bits DeepHash is not necessary.**
+A negative result produced by this project itself: at the same 52 bits,
+**PCA-52 + post-processing = 0.7800**, which is **higher than DeepHash + post-processing = 0.7422**.
+The first two stages (continuous pre-training + STE fine-tuning) matter in the short-code regime
+(≤ 16 bits, 8.8× PCA at 8 bits); at 52 bits post-processing is the real key.
+See the "Bit-width boundary" section above.
 
 ---
 
@@ -564,6 +636,9 @@ hsh64/
 | Cross-lingual retrieval evaluation | ✅ done (median rank 2, top-10 86.7%) |
 | Natural Chinese vocabularies 3k / 6k / 10k / 16k | ✅ done |
 | Scale evaluation (3k→16k recall curve + baselines) | ✅ done |
+| Same-memory comparison (PQ-8B) | ✅ done (at 16k words: 125 KB vs PQ 637 KB, and 0.076 higher recall) |
+| Bit-width ablation (8/12/16/20/32/40/48/52) | ✅ done (DeepHash required at ≤16 bits, PCA better at ≥20) |
+| Need for DeepHash at 52 bits | ⚠️ measured unnecessary (PCA+post 0.7800 > DH+post 0.7422) |
 | Python↔Rust parity test | ✅ done (mutation-verified) |
 | Unit + integration + parity tests | ✅ all 34 pass |
 | `abs` perfect-hash seed table | ⚠️ inert (`build_seed_table` has no call site, so `abs` loses its uniqueness guarantee) |

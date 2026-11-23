@@ -1,0 +1,135 @@
+{
+ "budgets_bytes": [
+  8,
+  16,
+  32
+ ],
+ "datasets": {
+  "nat3000": {
+   "n": 3000,
+   "teacher_dim": 1024,
+   "hsh_record": 0.6082,
+   "hsh_recomputed": 0.608233333333332,
+   "hsh_check_ok": true,
+   "teacher_float_bytes": 4096,
+   "teacher_float_recall": 1.0,
+   "pca512_float": {
+    "recall": 0.8375666666666826,
+    "bytes": 2048
+   },
+   "pq": {
+    "teacher1024_pq8B": {
+     "recall": 0.5788666666666668,
+     "bytes_per_item": 8,
+     "codebook_bytes": 1048576,
+     "total_bytes": 1072576,
+     "qps": 8845.682084679562,
+     "fit_s": 11.936806917190552
+    },
+    "teacher1024_pq16B": {
+     "recall": 0.6437666666666659,
+     "bytes_per_item": 16,
+     "codebook_bytes": 1048576,
+     "total_bytes": 1096576,
+     "qps": 4821.611762316597,
+     "fit_s": 7.248663663864136
+    },
+    "teacher1024_pq32B": {
+     "recall": 0.7275999999999998,
+     "bytes_per_item": 32,
+     "codebook_bytes": 1048576,
+     "total_bytes": 1144576,
+     "qps": 2436.895903941125,
+     "fit_s": 11.15477705001831
+    },
+    "pca512_pq8B": {
+     "recall": 0.6087999999999983,
+     "bytes_per_item": 8,
+     "codebook_bytes": 524288,
+     "total_bytes": 548288,
+     "qps": 8862.104326072504,
+     "fit_s": 3.6512463092803955
+    },
+    "pca512_pq16B": {
+     "recall": 0.6791333333333314,
+     "bytes_per_item": 16,
+     "codebook_bytes": 524288,
+     "total_bytes": 572288,
+     "qps": 4701.048860913287,
+     "fit_s": 5.703312635421753
+    },
+    "pca512_pq32B": {
+     "recall": 0.7353999999999998,
+     "bytes_per_item": 32,
+     "codebook_bytes": 524288,
+     "total_bytes": 620288,
+     "qps": 2485.6342648946497,
+     "fit_s": 9.151502132415771
+    }
+   }
+  },
+  "nat16000": {
+   "n": 16000,
+   "teacher_dim": 1024,
+   "hsh_record": 0.5965,
+   "hsh_recomputed": 0.596537500000003,
+   "hsh_check_ok": true,
+   "teacher_float_bytes": 4096,
+   "teacher_float_recall": 1.0,
+   "pca512_float": {
+    "recall": 0.8661437499998614,
+    "bytes": 2048
+   },
+   "pq": {
+    "teacher1024_pq8B": {
+     "recall": 0.38198125,
+     "bytes_per_item": 8,
+     "codebook_bytes": 1048576,
+     "total_bytes": 1176576,
+     "qps": 1250.6843890271655,
+     "fit_s": 48.98791003227234
+    },
+    "teacher1024_pq16B": {
+     "recall": 0.49599374999999896,
+     "bytes_per_item": 16,
+     "codebook_bytes": 1048576,
+     "total_bytes": 1304576,
+     "qps": 605.5975250197183,
+     "fit_s": 29.65497636795044
+    },
+    "teacher1024_pq32B": {
+     "recall": 0.6534750000000158,
+     "bytes_per_item": 32,
+     "codebook_bytes": 1048576,
+     "total_bytes": 1560576,
+     "qps": 321.2226007106382,
+     "fit_s": 39.1917245388031
+    },
+    "pca512_pq8B": {
+     "recall": 0.5207625000000016,
+     "bytes_per_item": 8,
+     "codebook_bytes": 524288,
+     "total_bytes": 652288,
+     "qps": 1158.2985243862386,
+     "fit_s": 15.922618389129639
+    },
+    "pca512_pq16B": {
+     "recall": 0.6383062500000198,
+     "bytes_per_item": 16,
+     "codebook_bytes": 524288,
+     "total_bytes": 780288,
+     "qps": 638.1628146455777,
+     "fit_s": 21.215792417526245
+    },
+    "pca512_pq32B": {
+     "recall": 0.7264562500000008,
+     "bytes_per_item": 32,
+     "codebook_bytes": 524288,
+     "total_bytes": 1036288,
+     "qps": 318.0907836699865,
+     "fit_s": 32.11457324028015
+    }
+   }
+  }
+ }
+}
