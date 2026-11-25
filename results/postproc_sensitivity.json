@@ -1,0 +1,324 @@
+{
+ "n": 3109,
+ "bits": 52,
+ "baseline": {
+  "pos_k": 10,
+  "neg_weight": 1.0,
+  "max_iters": 10
+ },
+ "grid": {
+  "pos_k": [
+   5,
+   10,
+   15,
+   20
+  ],
+  "neg_weight": [
+   0.5,
+   1.0,
+   2.0,
+   4.0
+  ],
+  "max_iters": [
+   5,
+   10,
+   20
+  ]
+ },
+ "results": {
+  "PCA": {
+   "baseline": 0.779993567063371,
+   "best": 0.7825024123512427,
+   "best_key": "pk10_nw1.0_it5",
+   "best_cfg": {
+    "pos_k": 10,
+    "neg_weight": 1.0,
+    "max_iters": 5
+   },
+   "gain_over_baseline": 0.0025088452878717638,
+   "sweep": {
+    "pk10_nw1.0_it10": {
+     "recall": 0.779993567063371,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 1.0,
+      "max_iters": 10
+     },
+     "seconds": 14.674101114273071
+    },
+    "pk5_nw1.0_it10": {
+     "recall": 0.5625924734641371,
+     "cfg": {
+      "pos_k": 5,
+      "neg_weight": 1.0,
+      "max_iters": 10
+     },
+     "seconds": 14.605447769165039
+    },
+    "pk15_nw1.0_it10": {
+     "recall": 0.751720810550021,
+     "cfg": {
+      "pos_k": 15,
+      "neg_weight": 1.0,
+      "max_iters": 10
+     },
+     "seconds": 14.52048134803772
+    },
+    "pk20_nw1.0_it10": {
+     "recall": 0.7337407526535903,
+     "cfg": {
+      "pos_k": 20,
+      "neg_weight": 1.0,
+      "max_iters": 10
+     },
+     "seconds": 14.84452748298645
+    },
+    "pk10_nw0.5_it10": {
+     "recall": 0.7688967513670026,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 0.5,
+      "max_iters": 10
+     },
+     "seconds": 14.711042881011963
+    },
+    "pk10_nw2.0_it10": {
+     "recall": 0.7537471855902279,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 2.0,
+      "max_iters": 10
+     },
+     "seconds": 14.566121816635132
+    },
+    "pk10_nw4.0_it10": {
+     "recall": 0.689964618848509,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 4.0,
+      "max_iters": 10
+     },
+     "seconds": 14.554991006851196
+    },
+    "pk10_nw1.0_it5": {
+     "recall": 0.7825024123512427,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 1.0,
+      "max_iters": 5
+     },
+     "seconds": 7.545090198516846
+    },
+    "pk10_nw1.0_it20": {
+     "recall": 0.7732068189128367,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 1.0,
+      "max_iters": 20
+     },
+     "seconds": 28.057873725891113
+    }
+   }
+  },
+  "ITQ": {
+   "baseline": 0.7963653908009078,
+   "best": 0.7963653908009078,
+   "best_key": "pk10_nw1.0_it10",
+   "best_cfg": {
+    "pos_k": 10,
+    "neg_weight": 1.0,
+    "max_iters": 10
+   },
+   "gain_over_baseline": 0.0,
+   "sweep": {
+    "pk10_nw1.0_it10": {
+     "recall": 0.7963653908009078,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 1.0,
+      "max_iters": 10
+     },
+     "seconds": 14.466284990310669
+    },
+    "pk5_nw1.0_it10": {
+     "recall": 0.5676744934062407,
+     "cfg": {
+      "pos_k": 5,
+      "neg_weight": 1.0,
+      "max_iters": 10
+     },
+     "seconds": 14.533750772476196
+    },
+    "pk15_nw1.0_it10": {
+     "recall": 0.7590221936313961,
+     "cfg": {
+      "pos_k": 15,
+      "neg_weight": 1.0,
+      "max_iters": 10
+     },
+     "seconds": 14.538344621658325
+    },
+    "pk20_nw1.0_it10": {
+     "recall": 0.7242521711161165,
+     "cfg": {
+      "pos_k": 20,
+      "neg_weight": 1.0,
+      "max_iters": 10
+     },
+     "seconds": 14.73809027671814
+    },
+    "pk10_nw0.5_it10": {
+     "recall": 0.7737857832100393,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 0.5,
+      "max_iters": 10
+     },
+     "seconds": 14.592299222946167
+    },
+    "pk10_nw2.0_it10": {
+     "recall": 0.7741395947249998,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 2.0,
+      "max_iters": 10
+     },
+     "seconds": 14.890400886535645
+    },
+    "pk10_nw4.0_it10": {
+     "recall": 0.6949179800578981,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 4.0,
+      "max_iters": 10
+     },
+     "seconds": 14.845955610275269
+    },
+    "pk10_nw1.0_it5": {
+     "recall": 0.7920231585718942,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 1.0,
+      "max_iters": 5
+     },
+     "seconds": 7.616031885147095
+    },
+    "pk10_nw1.0_it20": {
+     "recall": 0.7772595689932497,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 1.0,
+      "max_iters": 20
+     },
+     "seconds": 28.40482211112976
+    }
+   }
+  },
+  "DeepHash": {
+   "baseline": 0.7421678996461928,
+   "best": 0.7549372788678065,
+   "best_key": "pk10_nw1.0_it20",
+   "best_cfg": {
+    "pos_k": 10,
+    "neg_weight": 1.0,
+    "max_iters": 20
+   },
+   "gain_over_baseline": 0.012769379221613697,
+   "sweep": {
+    "pk10_nw1.0_it10": {
+     "recall": 0.7421678996461928,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 1.0,
+      "max_iters": 10
+     },
+     "seconds": 14.578397035598755
+    },
+    "pk5_nw1.0_it10": {
+     "recall": 0.5260212286908993,
+     "cfg": {
+      "pos_k": 5,
+      "neg_weight": 1.0,
+      "max_iters": 10
+     },
+     "seconds": 18.632776021957397
+    },
+    "pk15_nw1.0_it10": {
+     "recall": 0.7437439691219083,
+     "cfg": {
+      "pos_k": 15,
+      "neg_weight": 1.0,
+      "max_iters": 10
+     },
+     "seconds": 14.643182039260864
+    },
+    "pk20_nw1.0_it10": {
+     "recall": 0.7326793181087199,
+     "cfg": {
+      "pos_k": 20,
+      "neg_weight": 1.0,
+      "max_iters": 10
+     },
+     "seconds": 14.447523593902588
+    },
+    "pk10_nw0.5_it10": {
+     "recall": 0.7540045030556497,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 0.5,
+      "max_iters": 10
+     },
+     "seconds": 14.453486442565918
+    },
+    "pk10_nw2.0_it10": {
+     "recall": 0.7010614345448747,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 2.0,
+      "max_iters": 10
+     },
+     "seconds": 14.837395668029785
+    },
+    "pk10_nw4.0_it10": {
+     "recall": 0.6367320681891325,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 4.0,
+      "max_iters": 10
+     },
+     "seconds": 24.424018144607544
+    },
+    "pk10_nw1.0_it5": {
+     "recall": 0.7024123512383446,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 1.0,
+      "max_iters": 5
+     },
+     "seconds": 9.255143880844116
+    },
+    "pk10_nw1.0_it20": {
+     "recall": 0.7549372788678065,
+     "cfg": {
+      "pos_k": 10,
+      "neg_weight": 1.0,
+      "max_iters": 20
+     },
+     "seconds": 28.214239358901978
+    }
+   }
+  }
+ },
+ "rank_fixed": [
+  "ITQ",
+  "PCA",
+  "DeepHash"
+ ],
+ "rank_best": [
+  "ITQ",
+  "PCA",
+  "DeepHash"
+ ],
+ "rank_stable": true,
+ "seconds": 430.19783186912537
+}
